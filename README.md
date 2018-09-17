@@ -135,7 +135,7 @@ NVIDIA Developers. The computation performance is significantly improved.
 This is only available if you have NVIDIA GPU's.
 
 
-### Distributed training/>
+### Distributed training
 Folk really rare use the distributed training. The architecture, which offers 
 this feature, often suffers from the boilerplate code. This project 
 can be extended to distributed system by more sophisticated tools 
