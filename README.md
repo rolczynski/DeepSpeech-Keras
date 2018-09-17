@@ -116,7 +116,7 @@ parameters (like hyper-parameters), e.g.:
 experiments/configuration.yaml|model.parameters.rnn_sizes=[1024,1024]|exp_dir="experiments/new rnns"
 ```
 
-### Multi GPU support/>
+### Multi GPU support
 In this project we do data parallelism via [`multi_gpu_model`](https://keras.io/utils/#multi_gpu_model).
 Replicates a model on different GPUs and merge results on CPU. This induces 
 quasi-linear speedup on up to 8 GPUs. 
