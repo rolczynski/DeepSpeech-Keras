@@ -13,7 +13,7 @@ sentences = deepspeech(files)
 
 With DeepSpeech-Keras you can:
 - perform speech-to-text analysis using pre-trained models
-- train existing models even more with custom configuration
+- tune pre-trained models with custom configuration
 - experiment and create new models on your own
 
 All of this was done using high-level neural networks [Keras API](https://github.com/keras-team/keras). 
