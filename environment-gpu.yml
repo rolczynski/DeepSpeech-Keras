@@ -70,6 +70,7 @@ dependencies:
     - attrs==19.1.0
     - cycler==0.10.0
     - joblib==0.13.2
+    - https://github.com/kpu/kenlm/archive/master.zip
     - kiwisolver==1.0.1
     - matplotlib==3.0.3
     - mock==2.0.0

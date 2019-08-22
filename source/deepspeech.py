@@ -11,7 +11,7 @@ from keras.callbacks import Callback, TerminateOnNaN, LearningRateScheduler, Red
 from keras.optimizers import Optimizer, SGD, Adam
 from keras.backend.tensorflow_backend import _get_available_gpus as get_available_gpus
 
-from source import audio, model, text, ctc_decoder, configuration, utils
+from source import audio, model, text, decoding, configuration, utils
 from source.text import Alphabet
 from source.audio import FeaturesExtractor
 from source.callbacks import CustomModelCheckpoint, CustomTensorBoard, CustomEarlyStopping, ResultKeeper

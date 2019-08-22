@@ -47,6 +47,7 @@ dependencies:
     - gast==0.2.2
     - grpcio==1.19.0
     - joblib==0.13.2
+    - https://github.com/kpu/kenlm/archive/master.zip
     - keras==2.2.4
     - keras-applications==1.0.7
     - keras-preprocessing==1.0.9
