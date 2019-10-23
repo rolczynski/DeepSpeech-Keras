@@ -3,69 +3,60 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - absl-py=0.6.1=py36_0
+  - absl-py=0.6.1
   - blas=1.0=mkl
-  - blosc=1.15.1=hfc679d8_2
-  - bzip2=1.0.6=h470a237_2
-  - dill=0.2.8.2=py36_0
-  - lzo=2.10=h470a237_0
-  - numexpr=2.6.9=py36hf8a1672_0
-  - pytables=3.4.4=py36h72a6d90_4
-  - setuptools=40.6.3=py36_0
-  - termcolor=1.1.0=py36_1
-  - wheel=0.32.3=py36_0
+  - blosc=1.15.1
+  - bzip2=1.0.6
+  - dill=0.2.8.2
+  - lzo=2.10
+  - numexpr=2.6.9
+  - pytables=3.4.4
+  - setuptools=40.6.3
+  - termcolor=1.1.0
+  - wheel=0.32.3
   - _tflow_select=2.1.0=gpu
-  - astor=0.7.1=py36_0
-  - c-ares=1.15.0=h7b6447c_1
+  - astor=0.7.1
+  - c-ares=1.15.0
   - ca-certificates=2018.03.07=0
-  - certifi=2018.11.29=py36_0
-  - cudatoolkit=9.2=0
-  - cudnn=7.2.1=cuda9.2_0
-  - cupti=9.2.148=0
-  - gast=0.2.0=py36_0
-  - grpcio=1.16.1=py36hf8bcb03_1
-  - h5py=2.9.0=py36h7918eee_0
-  - hdf5=1.10.4=hb1b8bf9_0
+  - certifi=2018.11.29
+  - gast=0.2.0
+  - grpcio=1.16.1
+  - h5py=2.9.0
+  - hdf5=1.10.4
   - intel-openmp=2019.1=144
   - keras=2.2.4=0
-  - keras-applications=1.0.6=py36_0
-  - keras-base=2.2.4=py36_0
-  - keras-preprocessing=1.0.5=py36_0
-  - libedit=3.1.20170329=h6b74fdf_2
-  - libffi=3.2.1=hd88cf55_4
-  - libgcc-ng=8.2.0=hdf63c60_1
-  - libgfortran-ng=7.3.0=hdf63c60_0
-  - libprotobuf=3.6.1=hd408876_0
-  - libstdcxx-ng=8.2.0=hdf63c60_1
-  - markdown=3.0.1=py36_0
+  - keras-applications=1.0.6
+  - keras-base=2.2.4
+  - keras-preprocessing=1.0.5
+  - libffi=3.2.1
+  - libprotobuf=3.6.1
+  - markdown=3.0.1
   - mkl=2019.1=144
-  - mkl_fft=1.0.6=py36hd81dba3_0
-  - mkl_random=1.0.2=py36hd81dba3_0
-  - ncurses=6.1=he6710b0_1
-  - numpy=1.15.4=py36h7e9f1db_0
-  - numpy-base=1.15.4=py36hde5b4d6_0
-  - openssl=1.1.1a=h7b6447c_0
-  - pandas=0.23.4=py36h04863e7_0
-  - pip=18.1=py36_0
-  - protobuf=3.6.1=py36he6710b0_0
-  - python=3.6.8=h0371630_0
-  - python-dateutil=2.7.5=py36_0
-  - pytz=2018.7=py36_0
-  - pyyaml=3.13=py36h14c3975_0
-  - readline=7.0=h7b6447c_5
-  - scipy=1.1.0=py36h7c811a0_2
-  - six=1.12.0=py36_0
-  - sqlite=3.26.0=h7b6447c_0
-  - tensorboard=1.12.2=py36he6710b0_0
-  - tensorflow=1.12.0=gpu_py36he74679b_0
-  - tensorflow-base=1.12.0=gpu_py36had579c0_0
-  - tensorflow-gpu=1.12.0=h0d30ee6_0
-  - tk=8.6.8=hbc83047_0
-  - werkzeug=0.14.1=py36_0
-  - xz=5.2.4=h14c3975_4
-  - yaml=0.1.7=had09818_2
-  - zlib=1.2.11=h7b6447c_3
+  - mkl_fft=1.0.6
+  - mkl_random=1.0.2
+  - numpy=1.15.4
+  - numpy-base=1.15.4
+  - openssl=1.1.1a
+  - pandas=0.23.4
+  - pip=18.1
+  - protobuf=3.6.1
+  - python=3.6.8
+  - python-dateutil=2.7.5
+  - pytz=2018.7
+  - pyyaml=3.13
+  - scipy=1.1.0
+  - six=1.12.0
+  - sqlite=3.26.0
+  - tensorboard=1.12.2
+  - tensorflow-base=1.12.0
+  - tensorflow-gpu=1.12.0
+  - tk=8.6.8
+  - werkzeug=0.14.1
+  - xz=5.2.4
+  - yaml=0.1.7
+  - zlib=1.2.11
   - pip:
+    - libgcc-ng=8.2.0
     - atomicwrites==1.3.0
     - attrs==19.1.0
     - cycler==0.10.0
@@ -79,8 +70,17 @@ dependencies:
     - py==1.8.0
     - pyparsing==2.3.1
     - pytest==4.3.0
-    - python-speech-features==0.6
+    - python_speech_features==0.6
     - seaborn==0.9.0
     - tables==3.4.4
     - tensorflow-estimator==1.13.0
     - tqdm==4.31.1
+    - readline=7.0
+    - cudatoolkit=9.2=0
+    - cudnn=7.2.1=cuda9.2_0
+    - cupti=9.2.148
+    - ncurses=6.1
+    - libstdcxx-ng=8.2.0
+    - tensorflow=1.12.0=gpu
+    - libedit=3.1.20170329
+    - libgfortran-ng=7.3.0

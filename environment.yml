@@ -3,39 +3,33 @@ channels:
   - defaults
 dependencies:
   - blas=1.0=mkl
-  - blosc=1.14.4=hdbcaa40_0
-  - bzip2=1.0.6=h14c3975_5
+  - blosc=1.14.4
+  - bzip2=1.0.6
   - ca-certificates=2018.03.07=0
-  - certifi=2018.11.29=py36_0
-  - h5py=2.9.0=py36h7918eee_0
-  - hdf5=1.10.4=hb1b8bf9_0
+  - certifi=2018.11.29
+  - dill==0.2.8.2
+  - h5py=2.9.0
+  - hdf5=1.10.4
   - intel-openmp=2019.1=144
-  - libedit=3.1.20170329=h6b74fdf_2
-  - libffi=3.2.1=hd88cf55_4
-  - libgcc-ng=8.2.0=hdf63c60_1
-  - libgfortran-ng=7.3.0=hdf63c60_0
-  - libstdcxx-ng=8.2.0=hdf63c60_1
-  - lzo=2.10=h49e0be7_2
+  - lzo=2.10
   - mkl=2019.1=144
-  - mkl_fft=1.0.6=py36hd81dba3_0
-  - mkl_random=1.0.2=py36hd81dba3_0
-  - ncurses=6.1=he6710b0_1
-  - numexpr=2.6.8=py36h9e4a6bb_0
-  - numpy=1.15.4=py36h7e9f1db_0
-  - numpy-base=1.15.4=py36hde5b4d6_0
-  - openssl=1.1.1a=h7b6447c_0
-  - pip=18.1=py36_0
-  - pytables=3.4.4=py36h71ec239_0
-  - python=3.6.7=h0371630_0
-  - readline=7.0=h7b6447c_5
-  - setuptools=40.6.2=py36_0
-  - six=1.12.0=py36_0
-  - snappy=1.1.7=hbae5bb6_3
-  - sqlite=3.25.3=h7b6447c_0
-  - tk=8.6.8=hbc83047_0
-  - wheel=0.32.3=py36_0
-  - xz=5.2.4=h14c3975_4
-  - zlib=1.2.11=h7b6447c_3
+  - mkl_fft=1.0.6
+  - mkl_random=1.0.2
+  - numexpr=2.6.8
+  - numpy=1.15.4
+  - numpy-base=1.15.4
+  - openssl=1.1.1a
+  - pip=18.1
+  - pytables=3.4.4
+  - python=3.6.7
+  - setuptools=40.6.2
+  - six=1.12.0
+  - snappy=1.1.7
+  - sqlite=3.25.3
+  - tk=8.6.8
+  - wheel=0.32.3
+  - xz=5.2.4
+  - zlib=1.2.11
   - pip:
     - absl-py==0.7.0
     - astor==0.7.1
@@ -43,7 +37,6 @@ dependencies:
     - attrs==19.1.0
     - cycler==0.10.0
     - dataclasses==0.6
-    - dill==0.2.9
     - gast==0.2.2
     - grpcio==1.19.0
     - joblib==0.13.2
@@ -79,3 +72,10 @@ dependencies:
     - termcolor==1.1.0
     - tqdm==4.31.1
     - werkzeug==0.14.1
+    - libstdcxx-ng=8.2.0
+    - libgcc-ng=8.2.0
+    - readline=7.0
+    - libffi=3.2.1
+    - libgfortran-ng=7.3.0
+    - libedit=3.1.20170329
+    - ncurses=6.1
