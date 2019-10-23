@@ -11,11 +11,11 @@ from keras.callbacks import Callback, TerminateOnNaN, LearningRateScheduler, Red
 from keras.optimizers import Optimizer, SGD, Adam
 from keras.backend.tensorflow_backend import _get_available_gpus as get_available_gpus
 
-from source import audio, model, text, ctc_decoder, configuration, utils
-from source.text import Alphabet
-from source.audio import FeaturesExtractor
-from source.callbacks import CustomModelCheckpoint, CustomTensorBoard, CustomEarlyStopping, ResultKeeper
-from source.configuration import Configuration
+from deepspeech_keras import audio, model, text, ctc_decoder, configuration, utils
+from deepspeech_keras.text import Alphabet
+from deepspeech_keras.audio import FeaturesExtractor
+from deepspeech_keras.callbacks import CustomModelCheckpoint, CustomTensorBoard, CustomEarlyStopping, ResultKeeper
+from deepspeech_keras.configuration import Configuration
 logger = logging.getLogger('deepspeech')
 
 

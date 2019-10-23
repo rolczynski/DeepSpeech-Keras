@@ -42,13 +42,13 @@ def get_pretrained_model_dir(name: str) -> str:
     pretrained_models = ['pl']
     if name in pretrained_models:
         root_dir = get_root_dir()
-        model_dir = os.path.join(root_dir, 'models', name)
+        model_dir = os.path.join(root_dir, 'deepspeech_keras\models', name)
         return model_dir
     raise ValueError('Not valid pretrained model')
 
 
 def load(name: str):
-    from deepspeech import DeepSpeech
+    from deepspeech_keras.deepspeech import DeepSpeech
     if os.path.isdir(name):
         model_dir = name
     else:
@@ -57,6 +57,7 @@ def load(name: str):
     config_path = os.path.join(model_dir, 'configuration.yaml')
     alphabet_path = os.path.join(model_dir, 'alphabet.txt')
     weights_path = os.path.join(model_dir, 'weights.hdf5')
+    print("config path", config_path)
     assert os.path.isfile(config_path), 'The config file required in the directory'
     assert os.path.isfile(alphabet_path), 'The alphabet file required in the directory'
 

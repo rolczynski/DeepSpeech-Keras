@@ -4,7 +4,7 @@ import tensorflow as tf
 import logging
 from keras.callbacks import Callback, TensorBoard, EarlyStopping
 
-from source.utils import save
+from deepspeech_keras.utils import save
 
 logger = logging.getLogger('deepspeech')
 

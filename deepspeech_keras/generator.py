@@ -4,9 +4,9 @@ import h5py
 import numpy as np
 import pandas as pd
 from keras.utils import Sequence
-from source.text import Alphabet
-from source.audio import FeaturesExtractor
-from source.augmentation import mask_features
+from deepspeech_keras.text import Alphabet
+from deepspeech_keras.audio import FeaturesExtractor
+from deepspeech_keras.augmentation import mask_features
 
 
 class DataGenerator(Sequence):

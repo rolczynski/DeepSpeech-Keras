@@ -6,7 +6,7 @@ import tensorflow as tf
 from typing import Callable
 from keras.backend import tensorflow_backend as K
 
-from source.text import Alphabet
+from deepspeech_keras.text import Alphabet
 NEG_INF = -float("inf")
 
 
