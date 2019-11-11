@@ -1,11 +1,11 @@
-import numpy as np
-import warnings
+import os
 from typing import List
+import numpy as np
 
 
 class Alphabet:
     """
-    Read alphabet.txt, which is the list of valid characters. Alphabet has two
+    Read alphabet-pl.txt, which is the list of valid characters. Alphabet has two
     special characters:
       - space: on the beginning
       - blank: default added as the last char
@@ -13,11 +13,16 @@ class Alphabet:
     This class is used to convert characters to labels and vice versa.
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str = None, lang: str = None):
         self.size = 0
         self.blank_token = None
         self._label_to_str = []
         self._str_to_label = {}
+        if lang in ['pl']:
+            directory = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(directory, f'alphabet-{lang}.txt')
+        elif not file_path:
+            raise ValueError
         self.process_alphabet_file(file_path)
 
     def __contains__(self, char: str) -> bool:
@@ -33,7 +38,7 @@ class Alphabet:
         return self._str_to_label[string]
 
     def process_alphabet_file(self, file_path: str):
-        """ Read alphabet.txt file. """
+        """ Read alphabet-pl.txt file. """
         with open(file_path) as file:
             for line in file:
                 if line.startswith('#'):
@@ -50,17 +55,14 @@ class Alphabet:
         """ Convert batch transcripts to labels """
         batch_labels = [[self.label_from_string(c) for c in transcript if c in self]
                         for transcript in transcripts]
-
         max_len = max(map(len, batch_labels))
         default_value = self.blank_token
-
         for labels in batch_labels:
             remainder = [default_value] * (max_len - len(labels))
             labels.extend(remainder)
-
         return np.array(batch_labels)
 
-    def get_batch_transcripts(self, sequences: np.ndarray) -> List[str]:
+    def get_batch_transcripts(self, sequences: List[np.ndarray]) -> List[str]:
         """ Convert label sequences to transcripts. The `-1` also means the blank tag """
         return [''.join(self.string_from_label(char_label) for char_label in sequence
                         if char_label not in (-1, self.blank_token))
