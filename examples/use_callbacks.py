@@ -2,8 +2,8 @@ import os
 import numpy as np
 import automatic_speech_recognition as asr
 
-train_gen = asr.generator.SourceGenerator.from_csv('train.csv', batch_size=32)
-dev_gen = asr.generator.SourceGenerator.from_csv('dev.csv', batch_size=32)
+train_gen = asr.generator.DataGenerator.from_csv('train.csv', batch_size=32)
+dev_gen = asr.generator.DataGenerator.from_csv('dev.csv', batch_size=32)
 polish_alphabet = asr.text.Alphabet(lang='pl')
 filer_banks = asr.features.FilterBanks(
     samplerate=16000,
@@ -48,6 +48,6 @@ callbacks = [learning_rate_scheduler, batch_logger, checkpoint]
 pipeline.fit(train_gen, dev_gen, callbacks=callbacks, epochs=25)
 pipeline.save(model_dir)
 
-eval_gen = asr.generator.SourceGenerator.from_csv('eval.csv')
+eval_gen = asr.generator.DataGenerator.from_csv('eval.csv')
 wer, cer = asr.evaluate.calculate_error_rates(pipeline, eval_gen)
 print(f'WER: {wer}   CER: {cer}')

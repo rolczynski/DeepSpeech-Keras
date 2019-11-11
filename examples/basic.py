@@ -1,7 +1,7 @@
 import automatic_speech_recognition as asr
 
-train_gen = asr.generator.SourceGenerator.from_csv('train.csv', batch_size=32)
-dev_gen = asr.generator.SourceGenerator.from_csv('dev.csv', batch_size=32)
+train_gen = asr.generator.DataGenerator.from_csv('train.csv', batch_size=32)
+dev_gen = asr.generator.DataGenerator.from_csv('dev.csv', batch_size=32)
 alphabet = asr.text.Alphabet(lang='pl')
 features_extractor = asr.features.FilterBanks(
     samplerate=16000,
@@ -29,6 +29,6 @@ pipeline = asr.pipeline.CTCPipeline(
 pipeline.fit(train_gen, dev_gen, epochs=25)
 pipeline.save('/checkpoint')
 
-eval_gen = asr.generator.SourceGenerator.from_csv('eval.csv')
+eval_gen = asr.generator.DataGenerator.from_csv('eval.csv')
 wer, cer = asr.evaluate.calculate_error_rates(pipeline, eval_gen)
 print(f'WER: {wer}   CER: {cer}')

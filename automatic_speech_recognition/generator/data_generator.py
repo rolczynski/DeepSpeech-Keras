@@ -5,7 +5,7 @@ from . import Generator
 from .. import utils
 
 
-class SourceGenerator(Generator):
+class DataGenerator(Generator):
 
     @classmethod
     def from_csv(cls, file_path: str, **kwargs):
