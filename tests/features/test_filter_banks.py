@@ -21,3 +21,12 @@ def test_make_features(feature_extractor):
     features = feature_extractor.make_features(audio)
     assert features.dtype == np.float64
     assert features.shape == (450, 80)
+
+
+def test_save_load(feature_extractor):
+    file_path = 'feature_extractor.bin'
+    asr.utils.save(feature_extractor, file_path)
+    del feature_extractor
+    feature_extractor = asr.utils.load(file_path)
+    test_make_features(feature_extractor)
+    os.remove(file_path)
