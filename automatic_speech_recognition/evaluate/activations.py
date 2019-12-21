@@ -7,25 +7,32 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from . import evaluate
-from .. import generator
+from .. import dataset
 from .. import pipeline
 
 
 def save_metrics_and_activations(pipeline: pipeline.Pipeline,
-                                 generator: generator.Generator,
+                                 dataset: dataset.Dataset,
                                  store_path: str,
                                  prepared_features: bool = False,
-                                 return_metrics: bool = False) -> Union[Tuple[float, float], pd.DataFrame]:
-    references = pd.DataFrame(columns=['sample_id', 'transcript', 'prediction', 'wer', 'cer']).set_index('sample_id')
+                                 return_metrics: bool = False
+                                 ) -> Union[Tuple[float, float], pd.DataFrame]:
+
+    columns = ['sample_id', 'transcript', 'prediction', 'wer', 'cer']
+    references = pd.DataFrame(columns=columns).set_index('sample_id')
     get_activations = get_activations_function(pipeline.model)
+
     with h5py.File(store_path, mode='w') as store:
-        for data, transcripts in generator:
+        for data, transcripts in dataset:
             features = data if prepared_features else pipeline.features_extractor(data)
             *activations, y_hat = get_activations([features, 0])
             decoded_labels = pipeline.decoder(y_hat)
             predictions = pipeline.alphabet.get_batch_transcripts(decoded_labels)
-            batch_metrics = list(evaluate.get_metrics(sources=predictions, destinations=transcripts))
+            batch_metrics = list(evaluate.get_metrics(sources=predictions,
+                                                      destinations=transcripts))
+
             save_in_store(store, [*activations, y_hat], batch_metrics, references)
+
     with pd.HDFStore(store_path, mode='r+') as store:
         store.put('references', references)
     metrics = pd.DataFrame(functools.reduce(operator.concat, batch_metrics))
