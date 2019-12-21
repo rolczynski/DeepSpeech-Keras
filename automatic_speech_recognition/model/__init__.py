@@ -1,2 +1,2 @@
-from .deepspeech import DeepSpeech
-from .ctc_model import CTCModel
+from .deepspeech import get_deepspeech
+from .ctc_model import get_ctc_model

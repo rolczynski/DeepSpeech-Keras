@@ -4,8 +4,8 @@ import automatic_speech_recognition as asr
 
 
 @pytest.fixture
-def model() -> asr.model.CTCModel:
-    return asr.model.CTCModel(
+def model() -> asr.model.get_ctc_model:
+    return asr.model.get_ctc_model(
         layers_params=[{
             'constructor': 'expand_dims',
             'axis': -1
