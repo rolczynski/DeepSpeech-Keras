@@ -5,10 +5,10 @@ import numpy as np
 
 class Alphabet:
     """
-    Read alphabet-pl.txt, which is the list of valid characters. Alphabet has two
-    special characters:
-      - space: on the beginning
-      - blank: default added as the last char
+    Read alphabet-pl.txt, which is the list of valid characters. Alphabet has
+    two special characters:
+    - space on the beginning
+    - blank token default added as the last char
 
     This class is used to convert characters to labels and vice versa.
     """
@@ -18,7 +18,7 @@ class Alphabet:
         self.blank_token = None
         self._label_to_str = []
         self._str_to_label = {}
-        if lang in ['pl']:
+        if lang in ['en', 'pl']:
             directory = os.path.dirname(os.path.abspath(__file__))
             file_path = os.path.join(directory, f'alphabet-{lang}.txt')
         elif not file_path:
@@ -63,7 +63,9 @@ class Alphabet:
         return np.array(batch_labels)
 
     def get_batch_transcripts(self, sequences: List[np.ndarray]) -> List[str]:
-        """ Convert label sequences to transcripts. The `-1` also means the blank tag """
-        return [''.join(self.string_from_label(char_label) for char_label in sequence
+        """ Convert label sequences to transcripts. The `-1` also means the
+        blank tag """
+        return [''.join(self.string_from_label(char_label)
+                        for char_label in sequence
                         if char_label not in (-1, self.blank_token))
                 for sequence in sequences]
