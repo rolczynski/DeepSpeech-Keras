@@ -5,8 +5,8 @@ import automatic_speech_recognition as asr
 
 
 @pytest.fixture
-def decoder() -> asr.decoder.TensorflowDecoder:
-    return asr.decoder.TensorflowDecoder(beam_size=100)
+def decoder() -> asr.decoder.GreedyDecoder:
+    return asr.decoder.GreedyDecoder()
 
 
 def test_call(decoder):
@@ -15,10 +15,14 @@ def test_call(decoder):
          [0.1, 0.1, 0.7, 0.1],
          [0.2, 0.4, 0.3, 0.1],
          [0.2, 0.4, 0.3, 0.1]],
-
+        [[0.6, 0.2, 0.1, 0.1],
+         [0.2, 0.4, 0.3, 0.1],
+         [0.1, 0.1, 0.7, 0.1],
+         [0.2, 0.4, 0.3, 0.1]]
     ]).astype(np.float32)
-    batch_labels = decoder(data).numpy()
-    assert np.all(batch_labels == [[0, 2, 1]])      # The last column is blank, and last raw is not taken
+    labels_1, labels_2 = decoder(data)
+    assert np.all(labels_1 == [0, 2, 1])
+    assert np.all(labels_2 == [0, 1, 2, 1])
 
 
 def test_save_load(decoder):
@@ -26,6 +30,5 @@ def test_save_load(decoder):
     asr.utils.save(decoder, file_path)
     del decoder
     decoder = asr.utils.load(file_path)
-    assert decoder.beam_size == 100
     test_call(decoder)
     os.remove(file_path)
