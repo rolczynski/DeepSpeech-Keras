@@ -5,8 +5,8 @@ import automatic_speech_recognition as asr
 
 
 @pytest.fixture
-def feature_extractor() -> asr.features.FilterBanks:
-    return asr.features.FilterBanks(
+def feature_extractor() -> asr.features.Spectrogram:
+    return asr.features.Spectrogram(
         features_num=80,
         samplerate=16000,
         winlen=0.025,
