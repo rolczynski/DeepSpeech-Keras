@@ -1,34 +1,34 @@
+import numpy as np
 import automatic_speech_recognition as asr
 
-train_gen = asr.generator.DataGenerator.from_csv('train.csv', batch_size=32)
-dev_gen = asr.generator.DataGenerator.from_csv('dev.csv', batch_size=32)
-alphabet = asr.text.Alphabet(lang='pl')
+dataset = asr.dataset.Audio.from_csv('train.csv', batch_size=32)
+dev_dataset = asr.dataset.Audio.from_csv('dev.csv', batch_size=32)
+alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.FilterBanks(
-    samplerate=16000,
-    winlen=0.025,
+    features_num=160,
+    winlen=0.02,
     winstep=0.01,
-    nfilt=80,
-    winfunc='hamming'
+    winfunc=np.hanning
 )
-model = asr.model.DeepSpeech(
-    input_dim=80,
-    output_dim=36,
-    context=7,
-    units=1024
+model = asr.model.get_deepspeech2(
+    input_dim=160,
+    output_dim=29,
+    rnn_units=800,
+    is_mixed_precision=True
 )
 optimizer = asr.optimizer.Adam(
-    lr=0.0001,
+    lr=1e-4,
     beta_1=0.9,
     beta_2=0.999,
-    epsilon=0.00000001
+    epsilon=1e-8
 )
-decoder = asr.decoder.TensorflowDecoder(beam_size=1024)
+decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
-    alphabet, model, optimizer, decoder, features_extractor
+    alphabet, features_extractor, model, optimizer, decoder
 )
-pipeline.fit(train_gen, dev_gen, epochs=25)
+pipeline.fit(dataset, dev_dataset, epochs=25)
 pipeline.save('/checkpoint')
 
-eval_gen = asr.generator.DataGenerator.from_csv('eval.csv')
-wer, cer = asr.evaluate.calculate_error_rates(pipeline, eval_gen)
+test_dataset = asr.dataset.Audio.from_csv('test.csv')
+wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
 print(f'WER: {wer}   CER: {cer}')

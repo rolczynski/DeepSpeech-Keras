@@ -2,36 +2,32 @@ import os
 import numpy as np
 import automatic_speech_recognition as asr
 
-train_gen = asr.generator.DataGenerator.from_csv('train.csv', batch_size=32)
-dev_gen = asr.generator.DataGenerator.from_csv('dev.csv', batch_size=32)
-polish_alphabet = asr.text.Alphabet(lang='pl')
-filer_banks = asr.features.FilterBanks(
-    samplerate=16000,
-    winlen=0.025,
+dataset = asr.dataset.Audio.from_csv('train.csv', batch_size=32)
+dev_dataset = asr.dataset.Audio.from_csv('dev.csv', batch_size=32)
+alphabet = asr.text.Alphabet(lang='en')
+features_extractor = asr.features.FilterBanks(
+    features_num=160,
+    winlen=0.02,
     winstep=0.01,
-    nfilt=80,
-    winfunc='hamming'
+    winfunc=np.hanning
 )
-deepspeech = asr.model.DeepSpeech(
-    input_dim=80,
-    output_dim=36,
-    context=7,
-    units=1024
+model = asr.model.get_deepspeech2(
+    input_dim=160,
+    output_dim=29,
+    rnn_units=800,
+    is_mixed_precision=True
 )
-adam_optimizer = asr.optimizer.Adam(
-    lr=0.0001,
+optimizer = asr.optimizer.Adam(
+    lr=1e-4,
     beta_1=0.9,
     beta_2=0.999,
-    epsilon=0.00000001
+    epsilon=1e-8
 )
-tf_decoder = asr.decoder.TensorflowDecoder(beam_size=1024)
+decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
-    alphabet=polish_alphabet,
-    model=deepspeech,
-    optimizer=adam_optimizer,
-    decoder=tf_decoder,
-    features_extractor=filer_banks
+    alphabet, features_extractor, model, optimizer, decoder
 )
+# Monitor training process
 model_dir = 'model'
 os.makedirs(model_dir, exist_ok=True)
 learning_rate_scheduler = asr.callback.LearningRateScheduler(
@@ -45,9 +41,9 @@ checkpoint = asr.callback.DistributedModelCheckpoint(
     log_dir=os.path.join(model_dir, 'checkpoints')
 )
 callbacks = [learning_rate_scheduler, batch_logger, checkpoint]
-pipeline.fit(train_gen, dev_gen, callbacks=callbacks, epochs=25)
+pipeline.fit(dataset, dev_dataset, callbacks=callbacks, epochs=25)
 pipeline.save(model_dir)
 
-eval_gen = asr.generator.DataGenerator.from_csv('eval.csv')
-wer, cer = asr.evaluate.calculate_error_rates(pipeline, eval_gen)
+test_dataset = asr.dataset.Audio.from_csv('test.csv')
+wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
 print(f'WER: {wer}   CER: {cer}')
