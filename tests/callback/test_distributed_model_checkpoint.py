@@ -21,7 +21,8 @@ def test_distributed_checkpoint():
         callback.on_train_end()
 
     os.removedirs(log_dir)
-    assert np.isclose(callback.best_result, 0.01, atol=0.01)
+    assert np.isclose(callback.best_result, values[:, 1].min(), atol=0.0001)
+    assert not np.isclose(callback.best_result, values[:, 0].min(), atol=0.0001)
 
-    assert len(log.records) == 4
+    assert len(log.records) == 8
     assert log.records[0].name == 'asr.callback'
