@@ -17,11 +17,11 @@ def feature_extractor() -> asr.features.Spectrogram:
 
 def test_make_features(feature_extractor):
     directory = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(directory, 'sample.wav')
+    file_path = os.path.join(directory, '../sample-en.wav')
     audio = asr.utils.read_audio(file_path)
     features = feature_extractor.make_features(audio)
     assert features.dtype == np.float64
-    assert features.shape == (450, 80)
+    assert features.shape == (404, 80)
 
 
 def test_save_load(feature_extractor):

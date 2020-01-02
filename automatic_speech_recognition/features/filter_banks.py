@@ -13,6 +13,8 @@ class FilterBanks(features.FeaturesExtractor):
     def make_features(self, audio: np.ndarray) -> np.ndarray:
         """ Use `python_speech_features` lib to extract log filter banks from
         the features file. """
+        audio = self.normalize(audio.astype(np.float32))
+        audio = (audio * np.iinfo(np.int16).max).astype(np.int16)
         feat, energy = python_speech_features.fbank(
             audio, nfilt=self.features_num, **self.params
         )
