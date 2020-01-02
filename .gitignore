@@ -4,9 +4,6 @@
 .idea
 .ipynb_checkpoints
 
-# Unversioned files
-/bin
-
 # Do not include models
+*.h5
 *.bin
-/out
