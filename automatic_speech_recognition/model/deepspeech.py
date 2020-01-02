@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def get_deepspeech(input_dim=80, output_dim=36, context=7, units=1024,
+def get_deepspeech(input_dim, output_dim, context=7, units=1024,
                    dropouts=(0.1, 0.1, 0), random_state=1) -> keras.Model:
     """
     The `get_deepspeech` returns the graph definition of the DeepSpeech
@@ -21,10 +21,10 @@ def get_deepspeech(input_dim=80, output_dim=36, context=7, units=1024,
     # Create model under CPU scope and avoid OOM, errors during concatenation
     # a large distributed model.
     with tf.device('/cpu:0'):
-        # Define input tensor [time, features]
+        # Define input tensor [batch, time, features]
         input_tensor = layers.Input([None, input_dim], name='X')
 
-        # Add 4th dim (channel)
+        # Add 4th dimension [batch, time, frequency, channel]
         x = layers.Lambda(keras.backend.expand_dims,
                           arguments=dict(axis=-1))(input_tensor)
         # Fill zeros around time dimension
