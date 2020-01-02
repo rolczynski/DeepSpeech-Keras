@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow import keras
 from .. import decoder
 from .. import features
-from .. import generator
+from .. import dataset
 from .. import text
 
 
@@ -32,18 +32,14 @@ class Pipeline:
 
     @abc.abstractmethod
     def fit(self,
-            train_source: generator.Generator,
-            dev_source: generator.Generator,
+            train_source: dataset.Dataset,
+            dev_source: dataset.Dataset,
             prepared_features=False,
             **kwargs) -> keras.callbacks.History:
         pass
 
     @abc.abstractmethod
-    def predict(self,
-                file_paths: List[str] = None,
-                batch_audio: List[np.ndarray] = None,
-                features: np.ndarray = None,
-                **kwargs) -> List[str]:
+    def predict(self, batch_audio: List[np.ndarray],  **kwargs) -> List[str]:
         pass
 
     @abc.abstractmethod
