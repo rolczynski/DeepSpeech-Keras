@@ -1,8 +1,9 @@
 
 ### Automatic Speech Recognition
 
-The project aim is to distill and simplify the Automatic Speech Recognition.
-You can load a ready-to-use pipeline with a pre-trained model as the starting point in your research.
+The project aim is to distill the Automatic Speech Recognition research.
+At the beginning, you can load a ready-to-use pipeline with a pre-trained model.
+Benefit from the eager `TensorFlow 2.0` and freely monitor model weights, activations or gradients.
 
 ```python
 import automatic_speech_recognition as asr
@@ -10,41 +11,35 @@ import automatic_speech_recognition as asr
 file = 'to/test/sample.wav'  # sample rate 16 kHz, and 16 bit depth
 sample = asr.utils.read_audio(file)
 pipeline = asr.load('deepspeech2', lang='en')
+pipeline.model.summary()     # TensorFlow model
 sentences = pipeline.predict([sample])
 ```
-
-Now, we have a single english model (thanks to [Open Seq2Seq](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition.html#speech-recognition)).
-The evaluation results on the LibriSpeech dev-clean are in the table.
-To reference, the DeepSpeech (Mozilla) achieves around 7.5% WER, in contrast, the state-of-the-art (RWTH Aachen University) is 2.3% WER
-(recent evaluation results can be found [here](https://paperswithcode.com/sota/speech-recognition-on-librispeech-test-clean))
-Both of them, use the external language model to boost results.
-
-$$
-\begin{table}[h!]
-\vspace*{10pt}
-\centering
-\begin{tabular}{l c c c}
- 
-\toprule
-Model Name   &   Decoder  &   WER-dev   \\
-\midrule
-deepspeech2  &    greedy  &   6.71      \\ 
-\bottomrule
-
-\end{tabular}
-\end{table}
-$$
 
 <br>
 
 
-Shortly it turns out that the inference is not enough to truly start your own experiments.
+We support english (thanks to [Open Seq2Seq](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition.html#speech-recognition)).
+The evaluation results of the English benchmark LibriSpeech dev-clean are in the table.
+To reference, the DeepSpeech (Mozilla) achieves around 7.5% WER, whereas the state-of-the-art (RWTH Aachen University) equals 2.3% WER
+(recent evaluation results can be found [here](https://paperswithcode.com/sota/speech-recognition-on-librispeech-test-clean)).
+Both of them, use the external language model to boost results.
+
+| Model Name    | Decoder | WER-dev |
+| :---          |  :---:  |  :---:  |
+| `deepspeech2` | greedy  |   6.71  |
+
+<br>
+
+
+Shortly it turns out that you need to adjust pipeline a little bit.
 Take a look at the [CTC Pipeline](automatic_speech_recognition/pipeline/ctc_pipeline.py).
 The pipeline is responsible for connecting a neural network model 
-with all non-differential transformations (features extraction or prediction decoding)
-Components are independent.
+with all non-differential transformations (features extraction or prediction decoding).
+Pipeline components are independent.
 You can adjust them to your needs e.g. use more sophisticated feature extraction,
-different data augmentation, or add a language model decoder (static n-grams or huge transformers).
+different data augmentation, or add the language model decoder (static n-grams or huge transformers).
+You can do much more like distribute the training using the [Strategy](https://www.tensorflow.org/guide/distributed_training),
+or experiment with [mixed precision](https://www.tensorflow.org/api_docs/python/tf/keras/mixed_precision/experimental/Policy) policy.
 
 <br>
 
@@ -86,10 +81,6 @@ wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
 print(f'WER: {wer}   CER: {cer}')
 ```
 
-Benefit from the eager TensorFlow 2.0, and freely monitor the model weights, activations or gradients.
-You can do much more like distribute the training using the [Strategy](https://www.tensorflow.org/guide/distributed_training),
-or experiment with [mixed precision](https://www.tensorflow.org/api_docs/python/tf/keras/mixed_precision/experimental/Policy) policy.
-
 <br>
 
 
@@ -118,4 +109,5 @@ The fundamental repositories:
 - Mozilla - [DeepSpeech - A TensorFlow implementation of Baidu's DeepSpeech architecture](https://github.com/mozilla/DeepSpeech) 
 - Espnet - [End-to-End Speech Processing Toolkit](https://github.com/espnet/espnet)
 - Sean Naren - [Speech Recognition using DeepSpeech2](https://github.com/SeanNaren/deepspeech.pytorch)
+
 Moreover, you can explore the GitHub using key phrases like `ASR`, `DeepSpeech`, or `Speech-To-Text`.
