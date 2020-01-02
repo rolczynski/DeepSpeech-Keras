@@ -7,4 +7,5 @@ dependencies:
   - pytest=5.3.2
   - testfixtures=6.10.3
   - pip:
-    - python-speech-features==0.6
+      - google-cloud-storage==1.23.0
+      - python-speech-features==0.6
