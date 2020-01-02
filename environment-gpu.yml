@@ -3,6 +3,7 @@ dependencies:
   - python=3.7.5
   - tensorflow-gpu=2.0.0
   - pandas=0.25.3
+  - scipy=1.4.1
   - pytables=3.6.1
   - pytest=5.3.2
   - testfixtures=6.10.3

@@ -1,0 +1,2 @@
+include automatic_speech_recognition/text/*.txt      # Alphabets
+recursive-include automatic_speech_recognition *.py
