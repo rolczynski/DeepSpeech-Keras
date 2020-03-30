@@ -1,15 +1,21 @@
 import abc
-from typing import List
+from typing import List, Union, Tuple
 import numpy as np
 
 
 class FeaturesExtractor:
 
-    def __call__(self, batch_audio: List[np.ndarray]) -> np.ndarray:
+    def __call__(self,
+                 batch_audio: List[np.ndarray],
+                 return_lengths=False) -> Union[np.ndarray, Tuple[np.ndarray, list]]:
         """ Extract features from the file list. """
         features = [self.make_features(audio) for audio in batch_audio]
-        X = self.align(features)
-        return X.astype(np.float16)
+        X = self.align(features).astype(np.float16)
+        if return_lengths:
+            lengths = [len(feature_row) for feature_row in features]
+            return X, lengths
+        else:
+            return X
 
     @abc.abstractmethod
     def make_features(self, audio: np.ndarray) -> np.ndarray:

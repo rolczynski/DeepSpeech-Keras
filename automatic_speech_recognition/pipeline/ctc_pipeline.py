@@ -84,7 +84,7 @@ class CTCPipeline(Pipeline):
             **kwargs) -> keras.callbacks.History:
         """ Get ready data, compile and train a model. """
         dataset = self.wrap_preprocess(dataset, prepared_features, augmentation)
-        dev_dataset = self.wrap_preprocess(dataset, prepared_features, augmentation)
+        dev_dataset = self.wrap_preprocess(dev_dataset, prepared_features, augmentation)
         if not self._model.optimizer:  # a loss function and an optimizer
             self.compile_model()  # have to be set before the training
         return self._model.fit(dataset, validation_data=dev_dataset, **kwargs)
@@ -114,7 +114,7 @@ class CTCPipeline(Pipeline):
 
     def save(self, directory: str):
         """ Save each component of the CTC pipeline. """
-        self._model.save(os.path.join(directory, 'model.h5'))
+        self._model.save(os.path.join(directory, 'model.tf'))
         utils.save(self._alphabet, os.path.join(directory, 'alphabet.bin'))
         utils.save(self._decoder, os.path.join(directory, 'decoder.bin'))
         utils.save(self._features_extractor,
@@ -123,7 +123,7 @@ class CTCPipeline(Pipeline):
     @classmethod
     def load(cls, directory: str, **kwargs):
         """ Load each component of the CTC pipeline. """
-        model = keras.model.load_model(os.path.join(directory, 'model.h5'))
+        model = keras.model.load_model(os.path.join(directory, 'model.tf'))
         alphabet = utils.load(os.path.join(directory, 'alphabet.bin'))
         decoder = utils.load(os.path.join(directory, 'decoder.bin'))
         features_extractor = utils.load(

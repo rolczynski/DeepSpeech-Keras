@@ -1,0 +1,12 @@
+name: Automatic-Speech-tf21
+dependencies:
+  - python=3.7.5
+  - tensorflow
+  - pandas=0.25.3
+  - scipy=1.4.1
+  - pytables=3.6.1
+  - pytest=5.3.2
+  - testfixtures=6.10.3
+  - pip:
+      - google-cloud-storage==1.23.0
+      - python-speech-features==0.6

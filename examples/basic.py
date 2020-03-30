@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import automatic_speech_recognition as asr
+from automatic_speech_recognition.utils import load_weights, KerasTfLiteExporter
 
 dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
 dev_dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
@@ -27,8 +28,8 @@ decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
     alphabet, features_extractor, model, optimizer, decoder
 )
-pipeline.fit(dataset, dev_dataset, epochs=5)
-pipeline.save('/checkpoint')
+pipeline.fit(dataset, dev_dataset, epochs=0)
+pipeline.save('./checkpoint')
 
 test_dataset = asr.dataset.Audio.from_csv('test.csv')
 wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
