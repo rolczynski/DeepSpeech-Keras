@@ -36,6 +36,12 @@ def load_weights(model: keras.Model, model_chk: str, skip_on_fail: bool = False,
 
 
 def _print_layer_usage_info(skipped_layers, unused_saved_layers):
+    """
+    Hidden function to nicely print out whihc layers were not initialized or used in load_weights(...)
+    :param skipped_layers:
+    :param unused_saved_layers:
+    :return:
+    """
     logger.info(f"Could not load weights for {len(skipped_layers)} layers from model.")
     for layer_name in skipped_layers:
         logger.info(layer_name)
