@@ -27,7 +27,7 @@ def get_deepspeech2(input_dim, output_dim,
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
 
         # Add 4th dimension [batch, time, frequency, channel]
-        x = layers.Reshape([max_seq_length, input_dim, 1])(input_tensor)
+        x = layers.Reshape([max_seq_length or 1, input_dim, 1])(input_tensor)
         x = layers.Conv2D(filters=32,
                           kernel_size=[11, 41],
                           strides=[2, 2],
@@ -47,7 +47,7 @@ def get_deepspeech2(input_dim, output_dim,
         x = layers.ReLU(name='conv_2_relu')(x)
         # We need to squeeze to 3D tensor. Thanks to the stride in frequency
         # domain, we reduce the number of features four times for each channel.
-        x = layers.Reshape([max_seq_length, input_dim//4*32])(x)
+        x = layers.Reshape([max_seq_length or -1, input_dim//4*32])(x)
         for i in [1, 2, 3, 4, 5]:
             recurrent = layers.GRU(units=rnn_units,
                                    activation='tanh',

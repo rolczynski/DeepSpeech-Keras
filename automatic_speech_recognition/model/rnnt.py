@@ -29,7 +29,8 @@ def reduce_time(outputs, factor=2, time_major=True):
     pads = [[0, 0], [0, tf.math.floormod(max_time, 2)], [0, 0]]
     outputs = tf.pad(outputs, pads)
     concat_outputs = tf.reshape(outputs, (-1, batch_size, num_units * 2))
-    concat_outputs.set_shape([max_time // 2 + max_time % 2, None, 2 * num_units])
+    if isinstance(max_time, int):
+        concat_outputs.set_shape([max_time // 2 + max_time % 2, None, 2 * num_units])
 
     return concat_outputs
 

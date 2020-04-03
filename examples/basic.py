@@ -16,7 +16,8 @@ model = asr.model.get_deepspeech2(
     input_dim=160,
     output_dim=29,
     rnn_units=800,
-    is_mixed_precision=False
+    is_mixed_precision=False,
+    convert_tflite=True
 )
 optimizer = tf.optimizers.Adam(
     lr=1e-4,
@@ -28,9 +29,16 @@ decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
     alphabet, features_extractor, model, optimizer, decoder
 )
-pipeline.fit(dataset, dev_dataset, epochs=0)
-pipeline.save('./checkpoint')
+# pipeline.fit(dataset, dev_dataset, epochs=0)
+# pipeline.save('./checkpoint')
 
-test_dataset = asr.dataset.Audio.from_csv('test.csv')
-wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
-print(f'WER: {wer}   CER: {cer}')
+# test_dataset = asr.dataset.Audio.from_csv('test.csv')
+# wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
+# print(f'WER: {wer}   CER: {cer}')
+
+exporter = KerasTfLiteExporter(model, './checkpoint/model.tf', True)
+exporter.experimental_new_converter = True
+exporter.allow_custom_ops = True
+exporter.export('./model.tflite')
+
+
