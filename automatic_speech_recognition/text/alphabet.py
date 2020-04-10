@@ -56,7 +56,7 @@ class Alphabet:
         batch_labels = [[self.label_from_string(c) for c in transcript if c in self]
                         for transcript in transcripts]
         max_len = max(map(len, batch_labels))
-        default_value = self.blank_token
+        default_value = 0
         for labels in batch_labels:
             remainder = [default_value] * (max_len - len(labels))
             labels.extend(remainder)
