@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 import automatic_speech_recognition as asr
 
-dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
-dev_dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
+dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=2)
+dev_dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=2)
 alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.FilterBanks(
     features_num=160,
@@ -27,9 +27,9 @@ decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
     alphabet, features_extractor, model, optimizer, decoder
 )
-pipeline.fit(dataset, dev_dataset, epochs=0)
+pipeline.fit(dataset, dev_dataset, epochs=10, verbose=1)
 pipeline.save('./checkpoint')
 
-test_dataset = asr.dataset.Audio.from_csv('test.csv')
+test_dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
 wer, cer = asr.evaluate.calculate_error_rates(pipeline, test_dataset)
 print(f'WER: {wer}   CER: {cer}')

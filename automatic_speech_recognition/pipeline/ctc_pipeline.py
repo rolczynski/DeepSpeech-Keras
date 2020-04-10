@@ -58,16 +58,20 @@ class CTCPipeline(Pipeline):
     def preprocess(self,
                    batch: Tuple[List[np.ndarray], List[str]],
                    is_extracted: bool,
-                   augmentation: augmentation.Augmentation) -> Tuple[np.ndarray, np.ndarray]:
+                   augmentation: augmentation.Augmentation):
         """ Preprocess batch data to format understandable to a model. """
         data, transcripts = batch
         if is_extracted:  # then just align features
+            feature_lengths = [len(feature_seq) for feature_seq in data]
             features = FeaturesExtractor.align(data)
         else:
-            features = self._features_extractor(data)
+            features, feature_lengths = self._features_extractor(data, return_lengths=True)
         features = augmentation(features) if augmentation else features
+        feature_lengths = np.array(feature_lengths)
+
         labels = self._alphabet.get_batch_labels(transcripts)
-        return features, labels
+        label_lengths = np.array([len(decoded_text) for decoded_text in batch[1]])
+        return (features, feature_lengths, label_lengths), labels
 
     def compile_model(self):
         """ The compiled model means the model configured for training. """
@@ -92,7 +96,14 @@ class CTCPipeline(Pipeline):
     def predict(self, batch_audio: List[np.ndarray], **kwargs) -> List[str]:
         """ Get ready features, and make a prediction. """
         features = self._features_extractor(batch_audio)
-        batch_logits = self._model.predict(features, **kwargs)
+
+        # Make prediction with substituted additional tensors
+        input_tensors = [features]
+        for inp in self._model.inputs[1:]:
+            place_holder_shape = [dim_size if dim_size is not None else 0 for dim_size in inp.shape]
+            input_tensors.append(tf.zeros(place_holder_shape))
+        batch_logits = self._model.predict(input_tensors, **kwargs)
+
         decoded_labels = self._decoder(batch_logits)
         predictions = self._alphabet.get_batch_transcripts(decoded_labels)
         return predictions
@@ -104,11 +115,14 @@ class CTCPipeline(Pipeline):
         """ Dataset does not know the feature extraction process by design.
         The Pipeline class exclusively understand dependencies between
         components. """
+
         def preprocess(get_batch):
             def get_prep_batch(index: int):
                 batch = get_batch(index)
                 return self.preprocess(batch, is_extracted, augmentation)
+
             return get_prep_batch
+
         dataset.get_batch = preprocess(dataset.get_batch)
         return dataset
 
@@ -142,16 +156,14 @@ class CTCPipeline(Pipeline):
             logger.info("Training using single GPU or CPU")
         return dist_model
 
-    @staticmethod
-    def get_loss() -> Callable:
+    def get_loss(self) -> Callable:
         """ The CTC loss using TensorFlow's `ctc_loss`. """
-        def get_length(tensor):
-            lengths = tf.math.reduce_sum(tf.ones_like(tensor), 1)
-            return tf.cast(lengths, tf.int32)
-
         def ctc_loss(labels, logits):
-            label_length = get_length(labels)
-            logit_length = get_length(tf.math.reduce_max(logits, 2))
-            return tf.nn.ctc_loss(labels, logits, label_length, logit_length,
+            label_lenths = keras.backend.print_tensor(self.model.inputs[2][:, 0], 'label_lengths')
+            logit_lengths = keras.backend.print_tensor(self.model.inputs[1][:, 0], 'logit_lengths')
+            labels_ = keras.backend.print_tensor(labels, 'labels')
+            logits_ = keras.backend.print_tensor(logits, 'logits')
+            return tf.nn.ctc_loss(labels_, logits_, label_lenths,
+                                  logit_lengths,
                                   logits_time_major=False, blank_index=-1)
         return ctc_loss

@@ -125,10 +125,6 @@ def get_rnnt(input_dim,
     # Define input tensor [batch, time, features]
     input_tensor = layers.Input([max_seq_length, input_dim], name='features')
     labels = tf.keras.Input(shape=[max_seq_length], dtype=tf.int32, name='labels')
-    # Having 1 element vector is required to save and load model in non nightly tensorflow
-    # https://github.com/tensorflow/tensorflow/issues/35446.
-    feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
-    label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
 
     inp_enc = encoder(
         input_tensor,
@@ -150,4 +146,11 @@ def get_rnnt(input_dim,
     joint_outputs = tf.keras.layers.Dense(vocab_size_pred)(joint_inp)
     outputs = tf.nn.log_softmax(joint_outputs, axis=-1)
 
-    return keras.Model([input_tensor, labels, feature_lengths, label_lengths], outputs, name='RNNT')
+    if convert_tflite:
+        return keras.Model([input_tensor, labels], outputs, name='RNNT')
+    else:
+        # Having 1 element vector is required to save and load model in non nightly tensorflow
+        # https://github.com/tensorflow/tensorflow/issues/35446.
+        feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
+        label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
+        return keras.Model([input_tensor, labels, feature_lengths, label_lengths], outputs, name='RNNT')

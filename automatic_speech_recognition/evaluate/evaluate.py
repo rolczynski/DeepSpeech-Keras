@@ -19,6 +19,7 @@ def calculate_error_rates(pipeline: pipeline.Pipeline,
             predictions = pipeline.predict(data)
         else:
             predictions = pipeline.predict(batch_audio=data)
+        print(predictions)
         batch_metrics = get_metrics(sources=predictions,
                                     destinations=transcripts)
         metrics.extend(batch_metrics)

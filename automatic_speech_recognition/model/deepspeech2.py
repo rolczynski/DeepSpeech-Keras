@@ -27,7 +27,7 @@ def get_deepspeech2(input_dim, output_dim,
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
 
         # Add 4th dimension [batch, time, frequency, channel]
-        x = layers.Reshape([max_seq_length or 1, input_dim, 1])(input_tensor)
+        x = layers.Reshape([max_seq_length or -1, input_dim, 1])(input_tensor)
         x = layers.Conv2D(filters=32,
                           kernel_size=[11, 41],
                           strides=[2, 2],
@@ -64,11 +64,17 @@ def get_deepspeech2(input_dim, output_dim,
 
         # Return at each time step logits along characters. Then CTC
         # computation is more stable, in contrast to the softmax.
-        x = layers.TimeDistributed(layers.Dense(units=rnn_units*2), name='dense_1')(x)
+        x = layers.Dense(units=rnn_units*2, name='dense_1')(x)
         x = layers.ReLU(name='dense_1_relu')(x)
         x = layers.Dropout(rate=0.5)(x)
-        output_tensor = layers.TimeDistributed(layers.Dense(units=output_dim),
-                                               name='dense_2')(x)
+        output_tensor = layers.Dense(units=output_dim, name='dense_2')(x)
 
-        model = keras.Model(input_tensor, output_tensor, name='DeepSpeech2')
+        if convert_tflite:
+            model = keras.Model(input_tensor, output_tensor, name='DeepSpeech2')
+        else:
+            # Having 1 element vector is required to save and load model in non nightly tensorflow
+            # https://github.com/tensorflow/tensorflow/issues/35446.
+            feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
+            label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
+            model = keras.Model([input_tensor, feature_lengths, label_lengths], output_tensor, name='DeepSpeech2')
     return model

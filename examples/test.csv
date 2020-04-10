@@ -1,2 +1,3 @@
 path,transcript
 "../tests/sample-en.wav","the streets were narrow and unpaved but very fairly clean"
+"../tests/sample-en.wav","the streets were narrow and unpav clean"
