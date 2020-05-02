@@ -33,6 +33,6 @@ x
 y
 z
 '
-
+-
 # End of vocabulary
 # The last (non-comment) blank line represent the blank token

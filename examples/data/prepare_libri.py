@@ -6,6 +6,8 @@ import argparse
 import logging
 from pydub import AudioSegment
 import pandas as pd
+import wave
+import contextlib
 
 logging.basicConfig(level=logging.INFO)
 
@@ -46,18 +48,22 @@ def transfer_transcripted_audio(search_folder: str, dataset_folder: str) -> List
     :return: transcripts
     """
     transcripts = []
+    file_sizes = []
     for file in os.listdir(search_folder):
         if os.path.isdir(f'{search_folder}/{file}'):
             # Go recursive
-            transcripts.extend(transfer_transcripted_audio(f'{search_folder}/{file}', dataset_folder))
+            rec_transcripts, rec_filesizes = transfer_transcripted_audio(f'{search_folder}/{file}', dataset_folder)
+            transcripts.extend(rec_transcripts)
+            file_sizes.extend(rec_filesizes)
         elif file.endswith('.trans.txt'):
             # Read transcript and move each audio to final folder converting in the same time
             current_transcript = read_transcript(f'{search_folder}/{file}')
             for audio_name, _ in current_transcript:
                 convert_flac_to_wav(f'{search_folder}/{audio_name}.flac',
-                                    f'{dataset_folder}/{audio_name}.wav')
+                                    f'{dataset_folder}/{audio_name}.wav') 
+                file_sizes.append(os.path.getsize(f'{dataset_folder}/{audio_name}.wav'))
             transcripts.extend(current_transcript)
-    return transcripts
+    return transcripts, file_sizes
 
 
 def main(ds_name: str, audio_path_prefix: str):
@@ -86,10 +92,13 @@ def main(ds_name: str, audio_path_prefix: str):
     # Restructure dataset to our format
     if not os.path.isdir(result_folder):
         os.mkdir(result_folder)
-    all_transcripts = transfer_transcripted_audio(f'{ds_folder_name}/LibriSpeech/{audio_data_folder}',
+    logging.info('Start to convert all audio files and gather transcripts.')
+    all_transcripts, all_filesizes = transfer_transcripted_audio(f'{ds_folder_name}/LibriSpeech/{audio_data_folder}',
                                                   result_folder)
 
+    logging.info('Saving transcripts int data.csv.')
     transcripts_df = pd.DataFrame(all_transcripts, columns=['path', 'transcript'])
+    transcripts_df['filesize'] = all_filesizes
     transcripts_df.path = audio_path_prefix + f"/{result_folder}/" + transcripts_df.path + ".wav"
     transcripts_df.to_csv(f'{result_folder}/data.csv')
 

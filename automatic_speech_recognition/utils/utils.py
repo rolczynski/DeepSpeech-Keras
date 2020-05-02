@@ -8,6 +8,9 @@ import numpy as np
 from scipy.io import wavfile
 from tensorflow import keras
 from google.cloud import storage
+import tensorflow as tf
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.platform import gfile
 
 logger = logging.getLogger('asr.utils')
 
@@ -42,10 +45,11 @@ def maybe_download_from_bucket(bucket_name: str, remote_path: str, local_path: s
     download_from_bucket(bucket_name, remote_path, local_path)
 
 
-def read_audio(file_path: str) -> np.ndarray:
+def read_audio(file_path: str):
     """ Read already prepared features from the store. """
-    fs, audio = wavfile.read(file_path)
-    return audio
+    audio = tf.io.read_file(file_path)
+    waveform = tf.audio.decode_wav(audio)
+    return 16000, waveform
 
 
 def calculate_units(model: keras.Model) -> int:
@@ -72,3 +76,27 @@ def create_logger(file_path=None, level=20, name='asr') -> Logger:
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     return logger
+
+
+def load_deepspeech_graph(graph_path):
+    # GRAPH_PB_PATH = '/content/deepspeech-0.6.1-models/output_graph.pb'
+    gr = tf.Graph()
+    wts = {}
+    with tf.compat.v1.Session(graph=gr) as sess:
+        print("load graph")
+        with gfile.FastGFile(graph_path, 'rb') as f:
+            graph_def = tf.compat.v1.GraphDef()
+        graph_def.ParseFromString(f.read())
+        sess.graph.as_default()
+        tf.import_graph_def(graph_def, name='', )
+        graph_nodes = [n for n in graph_def.node]
+        names = []
+        for t in graph_nodes:
+            names.append(t.name)
+        print(names)
+        all_vars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES)
+        print(all_vars)
+        for n in graph_nodes:
+            if n.op == "Const":
+                wts[n.name] = tensor_util.MakeNdarray(n.attr["value"].tensor)
+    return wts, gr

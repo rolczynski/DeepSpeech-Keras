@@ -10,7 +10,8 @@ Metric = namedtuple('Metric', ['transcript', 'prediction', 'wer', 'cer'])
 def calculate_error_rates(pipeline: pipeline.Pipeline,
                           dataset: dataset.Dataset,
                           prepared_features: bool = False,
-                          return_metrics: bool = False
+                          return_metrics: bool = False,
+                          print_pred=False
                           ) -> Union[Tuple[float, float], pd.DataFrame]:
     """ Calculate base metrics: WER and CER. """
     metrics = []
@@ -19,7 +20,8 @@ def calculate_error_rates(pipeline: pipeline.Pipeline,
             predictions = pipeline.predict(data)
         else:
             predictions = pipeline.predict(batch_audio=data)
-        print(predictions)
+        if print_pred:
+            print(predictions)
         batch_metrics = get_metrics(sources=predictions,
                                     destinations=transcripts)
         metrics.extend(batch_metrics)

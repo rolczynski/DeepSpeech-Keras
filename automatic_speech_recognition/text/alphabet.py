@@ -48,7 +48,7 @@ class Alphabet:
                 self._label_to_str.append(char)
                 self._str_to_label[char] = self.size
                 self.size += 1
-            # Blank token is added on the end
+            # Blank token is the last
             self.blank_token = self.size - 1
 
     def get_batch_labels(self, transcripts: List[str]) -> np.ndarray:
@@ -56,7 +56,7 @@ class Alphabet:
         batch_labels = [[self.label_from_string(c) for c in transcript if c in self]
                         for transcript in transcripts]
         max_len = max(map(len, batch_labels))
-        default_value = 0
+        default_value = 999
         for labels in batch_labels:
             remainder = [default_value] * (max_len - len(labels))
             labels.extend(remainder)
@@ -67,5 +67,5 @@ class Alphabet:
         blank tag """
         return [''.join(self.string_from_label(char_label)
                         for char_label in sequence
-                        if char_label not in (-1, self.blank_token))
+                        if char_label not in (self.blank_token, -1))
                 for sequence in sequences]
