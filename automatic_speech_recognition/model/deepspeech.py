@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from ..utils import load_deepspeech_graph
+from ..utils import load_graph_from_gfile
 from collections import OrderedDict
 import logging
 
@@ -10,7 +10,8 @@ logger = tf.get_logger()
 logger.setLevel(logging.WARNING)
 
 
-def create_overlapping_windows(batch_x, num_channels, context=9, return_stacked=True):
+def create_overlapping_windows(
+        batch_x, num_channels, context=9, return_stacked=True):
     batch_size = tf.shape(input=batch_x)[0]
     window_width = 2 * context + 1
 
@@ -34,19 +35,20 @@ def create_overlapping_windows(batch_x, num_channels, context=9, return_stacked=
 
 
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
-                   dropouts=(0.05, 0.05, 0.05, 0, 0.05), tflite_version: bool = False,
+                   dropouts=(0.05, 0.05, 0.05, 0, 0.05),
+                   tflite_version: bool = False,
                    random_state=1) -> keras.Model:
     """
     The `get_deepspeech` returns the graph definition of the DeepSpeech
-    model. Then simple architectures like this can be easily serialize.
-    Default parameters are overwrite only wherein it is needed.
+    model. Default parameters are overwritten only where it is needed.
 
     Reference:
     "Deep Speech: Scaling up end-to-end speech recognition."
     (https://arxiv.org/abs/1412.5567)
     """
     if dropouts[3] != 0:
-        logger.warning("Mozilla DeepSpeech doesn't use dropout after LSTM(dropouts[3]). Be careful!")
+        logger.warning("Mozilla DeepSpeech doesn't use dropout "
+                       "after LSTM(dropouts[3]). Be careful!")
     np.random.seed(random_state)
     tf.random.set_seed(random_state)
 
@@ -59,7 +61,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = create_overlapping_windows(input_tensor, input_dim, context)
         # create overlapping windows loses shape data. Reshape restores it.
         x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
-        x = layers.Dense(units)(x)
+        x = layers.Dense(units, name='dense_1')(x)
 
         # TODO Try using conv to avoid materializing bigger tensor
         # # Add 4th dimension [batch, time, frequency, channel]
@@ -76,31 +78,37 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
 
-        x = layers.Dense(units)(x)
+        x = layers.Dense(units, name='dense_2')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[1])(x)
 
-        x = layers.Dense(units)(x)
+        x = layers.Dense(units, name='dense_3')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[2])(x)
 
-        x = layers.LSTM(units, return_sequences=True, unroll=tflite_version)(x)
+        x = layers.LSTM(units, return_sequences=True,
+                        name='lstm_1', unroll=tflite_version)(x)
         x = layers.Dropout(rate=dropouts[3])(x)
 
-        x = layers.Dense(units)(x)
+        x = layers.Dense(units, name='dense_4')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[4])(x)
 
-        x = layers.Dense(output_dim)(x)
+        x = layers.Dense(output_dim, name='dense_5')(x)
 
         if tflite_version:
             model = keras.Model(input_tensor, x, name='DeepSpeech')
         else:
-            # Having 1 element vector is required to save and load model in non nightly tensorflow
+            # Having 1 element vector is required to save and load model
+            # in non nightly tensorflow
             # https://github.com/tensorflow/tensorflow/issues/35446.
-            feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
-            label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
-            model = keras.Model([input_tensor, feature_lengths, label_lengths], x, name='DeepSpeech')
+            feature_lengths = tf.keras.Input(
+                shape=[1], dtype=tf.int32, name='feature_lengths')
+            label_lengths = tf.keras.Input(
+                shape=[1], dtype=tf.int32, name='label_lengths')
+            model = keras.Model(
+                [input_tensor, feature_lengths, label_lengths],
+                x, name='DeepSpeech')
     return model
 
 
@@ -129,18 +137,20 @@ def reformat_deepspeech_lstm(W, b):
     return W_x, W_h, b
 
 
-def load_mozila_deepspeech(path="./data/output_graph.pb", tflite_version=False):
-    loaded_tensors, loaded_graph = load_deepspeech_graph(path)
+def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False):
+    loaded_tensors, loaded_graph = load_graph_from_gfile(path)
     loaded_weights = []
     for key in loaded_tensors.keys():
         # check if tensor really represents a weight tensor
         if loaded_tensors[key].size > 10 and 'Const' not in key:
-            print(f'Found weight tensor {key} with shape {loaded_tensors[key].shape}')
+            print(
+                f'Found weight tensor {key} with '
+                f'shape {loaded_tensors[key].shape}')
             loaded_weights.append(loaded_tensors[key])
 
     # Fix differences in stored weights between mozilla deepspeech and keras
     W_x, W_h, b = reformat_deepspeech_lstm(loaded_weights[6], loaded_weights[7])
-    # TODO try using convcolution to avoid materializing bigger matrix
+    # TODO try using convolution to avoid materializing bigger matrix
     # w[1] = w[1].reshape((26, 19, 1, 2048))
 
     keras_weights = [

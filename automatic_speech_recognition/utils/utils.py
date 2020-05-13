@@ -78,13 +78,16 @@ def create_logger(file_path=None, level=20, name='asr') -> Logger:
     return logger
 
 
-def load_deepspeech_graph(graph_path):
-    # GRAPH_PB_PATH = '/content/deepspeech-0.6.1-models/output_graph.pb'
+def load_graph_from_gfile(gfile_path):
+    """
+    Loads graph from a ForzenGraph (.pb) file and extracts values of
+    tensors
+    """
     gr = tf.Graph()
     wts = {}
     with tf.compat.v1.Session(graph=gr) as sess:
         print("load graph")
-        with gfile.FastGFile(graph_path, 'rb') as f:
+        with gfile.FastGFile(gfile_path, 'rb') as f:
             graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
         sess.graph.as_default()
@@ -94,9 +97,11 @@ def load_deepspeech_graph(graph_path):
         for t in graph_nodes:
             names.append(t.name)
         print(names)
-        all_vars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES)
+        all_vars = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES)
         print(all_vars)
         for n in graph_nodes:
             if n.op == "Const":
-                wts[n.name] = tensor_util.MakeNdarray(n.attr["value"].tensor)
+                wts[n.name] = tensor_util.MakeNdarray(
+                    n.attr["value"].tensor)
     return wts, gr

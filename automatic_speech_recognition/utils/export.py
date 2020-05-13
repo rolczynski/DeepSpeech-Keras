@@ -13,7 +13,7 @@ class KerasTfLiteExporter:
         if chk_path:
             load_weights(model, chk_path, skip_on_load_fail)
         self.__dict__['_model'] = model
-        # Converting keras model with tf2.0 has a lot of unifxed bugs. Converter should be ran with tf2.1
+        # Converting keras model with tf2.0 has a lot of unfixed bugs. Converter should be ran with tf2.1
         self.__dict__['_converter'] = tf.lite.TFLiteConverter.from_keras_model(model)
 
     def __getattr__(self, key):
@@ -49,7 +49,7 @@ class KerasTfLiteExporter:
         tflite_output = interpreter.get_tensor(output_details[0]['index'])
 
         keras_output = self._model.predict(input_data)
-        if np.allclose(tflite_output, keras_output):
+        if np.allclose(tflite_output, keras_output, atol=1e-6):
             print("Test successful. Tflite and Keras give similar results")
         else:
             print("CAREFUL!!! TFLITE AND KERAS OUTPUTS ARE DIFFERENT")
