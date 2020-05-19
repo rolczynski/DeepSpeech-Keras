@@ -1,8 +1,11 @@
+import os
+import sys
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from ..utils import load_graph_from_gfile
+from automatic_speech_recognition.utils import load_graph_from_gfile
 from collections import OrderedDict
 import logging
 
@@ -61,7 +64,9 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = create_overlapping_windows(input_tensor, input_dim, context)
         # create overlapping windows loses shape data. Reshape restores it.
         x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
-        x = layers.Dense(units, name='dense_1')(x)
+
+        x = layers.TimeDistributed(layers.Dense(units),
+                                   name='dense_1')(x)
 
         # TODO Try using conv to avoid materializing bigger tensor
         # # Add 4th dimension [batch, time, frequency, channel]
@@ -78,11 +83,13 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
 
-        x = layers.Dense(units, name='dense_2')(x)
+        x = layers.TimeDistributed(
+            layers.Dense(units), name='dense_2')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[1])(x)
 
-        x = layers.Dense(units, name='dense_3')(x)
+        x = layers.TimeDistributed(
+            layers.Dense(units), name='dense_3')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[2])(x)
 
@@ -90,11 +97,13 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
                         name='lstm_1', unroll=tflite_version)(x)
         x = layers.Dropout(rate=dropouts[3])(x)
 
-        x = layers.Dense(units, name='dense_4')(x)
+        x = layers.TimeDistributed(
+            layers.Dense(units), name='dense_4')(x)
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[4])(x)
 
-        x = layers.Dense(output_dim, name='dense_5')(x)
+        x = layers.TimeDistributed(
+            layers.Dense(output_dim), name='dense_5')(x)
 
         if tflite_version:
             model = keras.Model(input_tensor, x, name='DeepSpeech')
@@ -102,12 +111,13 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
             # Having 1 element vector is required to save and load model
             # in non nightly tensorflow
             # https://github.com/tensorflow/tensorflow/issues/35446.
-            feature_lengths = tf.keras.Input(
-                shape=[1], dtype=tf.int32, name='feature_lengths')
-            label_lengths = tf.keras.Input(
-                shape=[1], dtype=tf.int32, name='label_lengths')
+            # feature_lengths = tf.keras.Input(
+            #     shape=[1], dtype=tf.int32, name='feature_lengths')
+            # label_lengths = tf.keras.Input(
+            #     shape=[1], dtype=tf.int32, name='label_lengths')
+            #  feature_lengths, label_lengths
             model = keras.Model(
-                [input_tensor, feature_lengths, label_lengths],
+                input_tensor,
                 x, name='DeepSpeech')
     return model
 

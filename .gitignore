@@ -1,9 +1,14 @@
-
 *.pyc
 *.log
-.idea
-.ipynb_checkpoints
+*.idea
+*.ipynb_checkpoints
+*__pycache__
 
 # Do not include models
 *.h5
 *.bin
+*.tflite
+
+# Specific masks for the notebooks folder
+notebooks/models/*
+notebooks/profiling_output/*
