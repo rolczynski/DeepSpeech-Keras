@@ -14,8 +14,23 @@ datasets = {
     'dev-clean': {
         'url': 'http://www.openslr.org/resources/12/dev-clean.tar.gz',
     },
+    'dev-other': {
+        'url': 'http://www.openslr.org/resources/12/dev-other.tar.gz',
+    },
     'test-clean': {
         'url': 'http://www.openslr.org/resources/12/test-clean.tar.gz',
+    },
+    'test-other': {
+        'url': 'http://www.openslr.org/resources/12/test-other.tar.gz',
+    },
+    'train-clean-100': {
+        'url': 'http://www.openslr.org/resources/12/train-clean-100.tar.gz',
+    },
+    'train-clean-360': {
+        'url': 'http://www.openslr.org/resources/12/train-clean-360.tar.gz',
+    },
+    'train-other-500': {
+        'url': 'http://www.openslr.org/resources/12/train-other-500.tar.gz',
     }
 }
 
