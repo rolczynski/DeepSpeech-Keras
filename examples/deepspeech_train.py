@@ -33,7 +33,7 @@ pipeline = asr.pipeline.CTCPipeline(
     alphabet, features_extractor, model, optimizer, decoder
 )
 callbacks = []
-# pipeline.fit(dataset, dev_dataset, epochs=1000, callbacks=callbacks)
+pipeline.fit(dataset, dev_dataset, epochs=1000, callbacks=callbacks)
 # pipeline.save('./checkpoint')
 
 test_dataset = asr.dataset.Audio.from_csv('./test.csv', batch_size=1, use_filesizes=False)

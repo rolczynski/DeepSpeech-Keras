@@ -60,7 +60,7 @@ class Alphabet:
         for labels in batch_labels:
             remainder = [default_value] * (max_len - len(labels))
             labels.extend(remainder)
-        return np.array(batch_labels)
+        return np.array(batch_labels).astype(np.int32)
 
     def get_batch_transcripts(self, sequences: List[np.ndarray]) -> List[str]:
         """ Convert label sequences to transcripts. The `-1` also means the
