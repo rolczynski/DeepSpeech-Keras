@@ -101,13 +101,7 @@ class CTCPipeline(Pipeline):
         """ Get ready features, and make a prediction. """
         features = self._features_extractor(batch_audio)
 
-        # Make prediction with substituted additional tensors
-        input_tensors = [features]
-        for inp in self._model.inputs[1:]:
-            batch_size = len(batch_audio)
-            place_holder_shape = [batch_size] + [dim_size if dim_size is not None else 0 for dim_size in inp.shape[1:]]
-            input_tensors.append(tf.zeros(place_holder_shape))
-        batch_logits = self._model.predict(input_tensors, **kwargs)
+        batch_logits = self._model.predict(features, **kwargs)
 
         decoded_labels = self._decoder(batch_logits)
         predictions = self._alphabet.get_batch_transcripts(decoded_labels)
