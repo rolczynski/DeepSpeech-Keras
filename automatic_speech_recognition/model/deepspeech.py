@@ -68,18 +68,6 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.TimeDistributed(layers.Dense(units),
                                    name='dense_1')(x)
 
-        # TODO Try using conv to avoid materializing bigger tensor
-        # # Add 4th dimension [batch, time, frequency, channel]
-        # x = layers.Lambda(keras.backend.expand_dims,
-        #                   arguments=dict(axis=3))(input_tensor)
-        # # Fill zeros around time dimension
-        # x = layers.ZeroPadding2D(padding=(context, 0))(x)
-        # # Convolve signal in time dim
-        # receptive_field = (2 * context + 1, input_dim)
-        # x = layers.Conv2D(filters=units, kernel_size=receptive_field)(x)
-        # # Squeeze into 3rd dim array
-        # x = layers.Lambda(keras.backend.squeeze, arguments=dict(axis=2))(x)
-
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
 
@@ -111,14 +99,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
             # Having 1 element vector is required to save and load model
             # in non nightly tensorflow
             # https://github.com/tensorflow/tensorflow/issues/35446.
-            # feature_lengths = tf.keras.Input(
-            #     shape=[1], dtype=tf.int32, name='feature_lengths')
-            # label_lengths = tf.keras.Input(
-            #     shape=[1], dtype=tf.int32, name='label_lengths')
-            #  feature_lengths, label_lengths
-            model = keras.Model(
-                input_tensor,
-                x, name='DeepSpeech')
+            model = keras.Model(input_tensor, x, name='DeepSpeech')
     return model
 
 

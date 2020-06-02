@@ -38,6 +38,7 @@ class CTCPipeline(Pipeline):
         self._features_extractor = features_extractor
         self._gpus = gpus
         self._model = model
+        self._just_processed_lengths = None
         # self._model = self.distribute_model(model, gpus) if gpus else model
 
     @property
@@ -72,13 +73,14 @@ class CTCPipeline(Pipeline):
 
         labels = self._alphabet.get_batch_labels(transcripts)
         label_lengths = np.array([len(decoded_text) for decoded_text in batch[1]])
-        return (features, feature_lengths, label_lengths), labels
+
+        self._just_processed_lengths = (label_lengths, feature_lengths)
+        return features, labels
 
     def compile_model(self):
         """ The compiled model means the model configured for training. """
-        y = keras.layers.Input(name='y', shape=[None], dtype='int32')
         loss = self.get_loss()
-        self._model.compile(self._optimizer, loss, target_tensors=[y])
+        self._model.compile(self._optimizer, loss, run_eagerly=True)
         logger.info("Model is successfully compiled")
 
     def fit(self,
@@ -99,13 +101,7 @@ class CTCPipeline(Pipeline):
         """ Get ready features, and make a prediction. """
         features = self._features_extractor(batch_audio)
 
-        # Make prediction with substituted additional tensors
-        input_tensors = [features]
-        for inp in self._model.inputs[1:]:
-            batch_size = len(batch_audio)
-            place_holder_shape = [batch_size] + [dim_size if dim_size is not None else 0 for dim_size in inp.shape[1:]]
-            input_tensors.append(tf.zeros(place_holder_shape))
-        batch_logits = self._model.predict(input_tensors, **kwargs)
+        batch_logits = self._model.predict(features, **kwargs)
 
         decoded_labels = self._decoder(batch_logits)
         predictions = self._alphabet.get_batch_transcripts(decoded_labels)
@@ -166,13 +162,8 @@ class CTCPipeline(Pipeline):
         """ The CTC loss using TensorFlow's `ctc_loss`. """
 
         def ctc_loss(labels, logits):
-            label_lenths = self.model.inputs[2][:, 0]
-            # label_lenths = keras.backend.print_tensor(label_lenths, 'label_lengths')
-            logit_lengths = self.model.inputs[1][:, 0]
-            # logit_lengths = keras.backend.print_tensor(logit_lengths, 'logit_lengths')
-            # labels_ = keras.backend.print_tensor(labels, 'labels')
-            # logits_ = keras.backend.print_tensor(logits, 'logits')
-            return tf.nn.ctc_loss(labels, logits, label_lenths,
+            label_lengths, logit_lengths = self._just_processed_lengths
+            return tf.nn.ctc_loss(labels, logits, label_lengths,
                                   logit_lengths,
                                   logits_time_major=False,
                                   blank_index=self.alphabet.blank_token)
