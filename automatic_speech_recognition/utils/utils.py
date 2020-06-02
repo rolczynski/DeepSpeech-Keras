@@ -100,3 +100,26 @@ def load_deepspeech_graph(graph_path):
             if n.op == "Const":
                 wts[n.name] = tensor_util.MakeNdarray(n.attr["value"].tensor)
     return wts, gr
+
+
+def create_overlapping_windows(batch_x, num_channels, context=9, return_stacked=True):
+    batch_size = tf.shape(input=batch_x)[0]
+    window_width = 2 * context + 1
+
+    # Create a constant convolution filter using an identity matrix, so that the
+    # convolution returns patches of the input tensor as is, and we can create
+    # overlapping windows over the MFCCs.
+    eye_filter = tf.constant(np.eye(window_width * num_channels)
+                             .reshape(window_width, num_channels, window_width * num_channels),
+                             tf.float32)  # pylint: disable=bad-continuation
+
+    # Create overlapping windows
+    batch_x = tf.nn.conv1d(input=batch_x, filters=eye_filter, stride=1, padding='SAME')
+
+    # Remove dummy depth dimension and reshape into [batch_size, n_windows, window_width, n_input]
+    if return_stacked:
+        batch_x = tf.reshape(batch_x, [batch_size, -1, window_width * num_channels])
+    else:
+        batch_x = tf.reshape(batch_x, [batch_size, -1, window_width, num_channels])
+
+    return batch_x
