@@ -33,6 +33,24 @@ def create_overlapping_windows(batch_x, num_channels, context=9, return_stacked=
     return batch_x
 
 
+class ResetMask(layers.Layer):
+    def __init__(self, **kwargs):
+        super(ResetMask, self).__init__(**kwargs)
+        self.supports_masking = True
+        self._compute_output_and_mask_jointly = True
+
+    def compute_mask(self, inputs, mask=None):
+        return inputs[1]
+
+    def call(self, inputs):
+        # Compute the mask and outputs simultaneously.
+        inputs[0]._keras_mask = inputs[1]
+        return inputs[0]
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
+
+
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
                    dropouts=(0.05, 0.05, 0.05, 0, 0.05), tflite_version: bool = False,
                    random_state=1) -> keras.Model:
@@ -56,10 +74,23 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
     with tf.device('/cpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
+
         x = create_overlapping_windows(input_tensor, input_dim, context)
         # create overlapping windows loses shape data. Reshape restores it.
         x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
+
         x = layers.Dense(units)(x)
+        # TODO Try using conv to avoid materializing bigger tensor
+        # # Add 4th dimension [batch, time, frequency, channel]
+        # x = layers.Lambda(keras.backend.expand_dims,
+        #                   arguments=dict(axis=3))(input_tensor)
+        # # Fill zeros around time dimension
+        # x = layers.ZeroPadding2D(padding=(context, 0))(x)
+        # # Convolve signal in time dim
+        # receptive_field = (2 * context + 1, input_dim)
+        # x = layers.Conv2D(filters=units, kernel_size=receptive_field)(x)
+        # # Squeeze into 3rd dim array
+        # x = layers.Lambda(keras.backend.squeeze, arguments=dict(axis=2))(x)
 
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
@@ -81,12 +112,8 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
         x = layers.Dense(output_dim)(x)
 
-        if tflite_version:
-            model = keras.Model(input_tensor, x, name='DeepSpeech')
-        else:
-            # Having 1 element vector is required to save and load model in non nightly tensorflow
-            # https://github.com/tensorflow/tensorflow/issues/35446.
-            model = keras.Model(input_tensor, x, name='DeepSpeech')
+        x = ResetMask()([x, tf.reduce_any(input_tensor != 0.0, axis=-1)])
+        model = keras.Model(input_tensor, x, name='DeepSpeech')
     return model
 
 

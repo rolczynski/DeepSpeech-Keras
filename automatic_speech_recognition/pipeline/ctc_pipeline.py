@@ -5,6 +5,7 @@ from typing import List, Callable, Tuple
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.python.keras.utils import losses_utils
 from . import Pipeline
 from .. import augmentation
 from .. import decoder
@@ -64,17 +65,12 @@ class CTCPipeline(Pipeline):
         """ Preprocess batch data to format understandable to a model. """
         data, transcripts = batch
         if is_extracted:  # then just align features
-            feature_lengths = [len(feature_seq) for feature_seq in data]
             features = FeaturesExtractor.align(data)
         else:
             features, feature_lengths = self._features_extractor(data, return_lengths=True)
         features = augmentation(features) if augmentation else features
-        feature_lengths = np.array(feature_lengths)
-
         labels = self._alphabet.get_batch_labels(transcripts)
-        label_lengths = np.array([len(decoded_text) for decoded_text in batch[1]])
 
-        self._just_processed_lengths = (label_lengths, feature_lengths)
         return features, labels
 
     def compile_model(self):
@@ -92,7 +88,7 @@ class CTCPipeline(Pipeline):
         """ Get ready data, compile and train a model. """
         dataset = self.wrap_preprocess(dataset, prepared_features, augmentation)
         if dev_dataset is not None:
-          dev_dataset = self.wrap_preprocess(dev_dataset, prepared_features, augmentation)
+            dev_dataset = self.wrap_preprocess(dev_dataset, prepared_features, augmentation)
         if not self._model.optimizer:  # a loss function and an optimizer
             self.compile_model()  # have to be set before the training
         return self._model.fit(dataset, validation_data=dev_dataset, **kwargs)
@@ -100,7 +96,6 @@ class CTCPipeline(Pipeline):
     def predict(self, batch_audio: List[np.ndarray], **kwargs) -> List[str]:
         """ Get ready features, and make a prediction. """
         features = self._features_extractor(batch_audio)
-
         batch_logits = self._model.predict(features, **kwargs)
 
         decoded_labels = self._decoder(batch_logits)
@@ -117,12 +112,14 @@ class CTCPipeline(Pipeline):
 
         def preprocess(get_batch):
             cache = {}
+
             def get_prep_batch(index: int):
                 if index not in cache:
                     batch = get_batch(index)
                     preprocessed = self.preprocess(batch, is_extracted, augmentation)
                     cache[index] = preprocessed
                 return cache[index]
+
             return get_prep_batch
 
         dataset.get_batch = preprocess(dataset.get_batch)
@@ -161,11 +158,17 @@ class CTCPipeline(Pipeline):
     def get_loss(self) -> Callable:
         """ The CTC loss using TensorFlow's `ctc_loss`. """
 
-        def ctc_loss(labels, logits):
-            label_lengths, logit_lengths = self._just_processed_lengths
-            return tf.nn.ctc_loss(labels, logits, label_lengths,
-                                  logit_lengths,
-                                  logits_time_major=False,
-                                  blank_index=self.alphabet.blank_token)
+        class CTCMeanLoss:
+            def __init__(self, blank_token, pad_token):
+                self.blank_token = blank_token
+                self.pad_token = pad_token
 
-        return ctc_loss
+            def __call__(self, labels, logits, sample_weight=None):
+                label_lengths = tf.math.count_nonzero(labels != self.pad_token, axis=1)
+                logit_lengths = tf.math.count_nonzero(logits._keras_mask, axis=1)
+                return tf.reduce_mean(tf.nn.ctc_loss(labels, logits, label_lengths,
+                                                     logit_lengths,
+                                                     logits_time_major=False,
+                                                     blank_index=self.blank_token), axis=0)
+
+        return CTCMeanLoss(self.alphabet.blank_token, self.alphabet.blank_token)
