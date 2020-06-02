@@ -158,17 +158,12 @@ class CTCPipeline(Pipeline):
     def get_loss(self) -> Callable:
         """ The CTC loss using TensorFlow's `ctc_loss`. """
 
-        class CTCMeanLoss:
-            def __init__(self, blank_token, pad_token):
-                self.blank_token = blank_token
-                self.pad_token = pad_token
+        def mean_ctc_loss(labels, logits):
+            label_lengths = tf.math.count_nonzero(labels != self.alphabet.blank_token, axis=1)
+            logit_lengths = tf.math.count_nonzero(logits._keras_mask, axis=1)
+            return tf.reduce_mean(tf.nn.ctc_loss(tf.cast(labels, tf.int32), logits, label_lengths,
+                                                 logit_lengths,
+                                                 logits_time_major=False,
+                                                 blank_index=self.alphabet.blank_token), axis=0)
 
-            def __call__(self, labels, logits, sample_weight=None):
-                label_lengths = tf.math.count_nonzero(labels != self.pad_token, axis=1)
-                logit_lengths = tf.math.count_nonzero(logits._keras_mask, axis=1)
-                return tf.reduce_mean(tf.nn.ctc_loss(labels, logits, label_lengths,
-                                                     logit_lengths,
-                                                     logits_time_major=False,
-                                                     blank_index=self.blank_token), axis=0)
-
-        return CTCMeanLoss(self.alphabet.blank_token, self.alphabet.blank_token)
+        return mean_ctc_loss

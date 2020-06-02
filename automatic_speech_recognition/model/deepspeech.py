@@ -79,18 +79,16 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         # create overlapping windows loses shape data. Reshape restores it.
         x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
 
-        x = layers.Dense(units)(x)
-        # TODO Try using conv to avoid materializing bigger tensor
-        # # Add 4th dimension [batch, time, frequency, channel]
-        # x = layers.Lambda(keras.backend.expand_dims,
-        #                   arguments=dict(axis=3))(input_tensor)
-        # # Fill zeros around time dimension
-        # x = layers.ZeroPadding2D(padding=(context, 0))(x)
-        # # Convolve signal in time dim
-        # receptive_field = (2 * context + 1, input_dim)
-        # x = layers.Conv2D(filters=units, kernel_size=receptive_field)(x)
-        # # Squeeze into 3rd dim array
-        # x = layers.Lambda(keras.backend.squeeze, arguments=dict(axis=2))(x)
+        # Add 4th dimension [batch, time, frequency, channel]
+        x = layers.Lambda(keras.backend.expand_dims,
+                          arguments=dict(axis=3))(input_tensor)
+        # Fill zeros around time dimension
+        x = layers.ZeroPadding2D(padding=(context, 0))(x)
+        # Convolve signal in time dim
+        receptive_field = (2 * context + 1, input_dim)
+        x = layers.Conv2D(filters=units, kernel_size=receptive_field)(x)
+        # Squeeze into 3rd dim array
+        x = layers.Lambda(keras.backend.squeeze, arguments=dict(axis=2))(x)
 
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
@@ -153,8 +151,8 @@ def load_mozila_deepspeech(path="./data/output_graph.pb", tflite_version=False):
 
     # Fix differences in stored weights between mozilla deepspeech and keras
     W_x, W_h, b = reformat_deepspeech_lstm(loaded_weights[6], loaded_weights[7])
-    # TODO try using convcolution to avoid materializing bigger matrix
-    # w[1] = w[1].reshape((26, 19, 1, 2048))
+    # TODO try using convolution to avoid materializing bigger matrix
+    loaded_weights[1] = loaded_weights[1].reshape((19, 26, 1, 2048))
 
     keras_weights = [
         loaded_weights[1], loaded_weights[0],  # Dense 1
