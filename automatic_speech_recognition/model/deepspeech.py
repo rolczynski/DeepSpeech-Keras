@@ -52,10 +52,6 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
     with tf.device('/cpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
 
-        x = create_overlapping_windows(input_tensor, input_dim, context)
-        # create overlapping windows loses shape data. Reshape restores it.
-        x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
-
         # Add 4th dimension [batch, time, frequency, channel]
         x = layers.Lambda(keras.backend.expand_dims,
                           arguments=dict(axis=3))(input_tensor)
