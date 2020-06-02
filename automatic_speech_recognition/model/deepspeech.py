@@ -13,28 +13,22 @@ logger = tf.get_logger()
 logger.setLevel(logging.WARNING)
 
 
-def create_overlapping_windows(
-        batch_x, num_channels, context=9, return_stacked=True):
-    batch_size = tf.shape(input=batch_x)[0]
-    window_width = 2 * context + 1
+class ResetMask(layers.Layer):
+    def __init__(self, **kwargs):
+        super(ResetMask, self).__init__(**kwargs)
+        self.supports_masking = True
+        self._compute_output_and_mask_jointly = True
 
-    # Create a constant convolution filter using an identity matrix, so that the
-    # convolution returns patches of the input tensor as is, and we can create
-    # overlapping windows over the MFCCs.
-    eye_filter = tf.constant(np.eye(window_width * num_channels)
-                             .reshape(window_width, num_channels, window_width * num_channels),
-                             tf.float32)  # pylint: disable=bad-continuation
+    def compute_mask(self, inputs, mask=None):
+        return inputs[1]
 
-    # Create overlapping windows
-    batch_x = tf.nn.conv1d(input=batch_x, filters=eye_filter, stride=1, padding='SAME')
+    def call(self, inputs):
+        # Compute the mask and outputs simultaneously.
+        inputs[0]._keras_mask = inputs[1]
+        return inputs[0]
 
-    # Remove dummy depth dimension and reshape into [batch_size, n_windows, window_width, n_input]
-    if return_stacked:
-        batch_x = tf.reshape(batch_x, [batch_size, -1, window_width * num_channels])
-    else:
-        batch_x = tf.reshape(batch_x, [batch_size, -1, window_width, num_channels])
-
-    return batch_x
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
 
 
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
@@ -61,12 +55,17 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
     with tf.device('/cpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
-        x = create_overlapping_windows(input_tensor, input_dim, context)
-        # create overlapping windows loses shape data. Reshape restores it.
-        x = layers.Reshape([max_seq_length if max_seq_length else -1, (2 * context + 1) * input_dim])(x)
 
-        x = layers.TimeDistributed(layers.Dense(units),
-                                   name='dense_1')(x)
+        # Add 4th dimension [batch, time, frequency, channel]
+        x = layers.Lambda(keras.backend.expand_dims,
+                          arguments=dict(axis=3))(input_tensor)
+        # Fill zeros around time dimension
+        x = layers.ZeroPadding2D(padding=(context, 0))(x)
+        # Convolve signal in time dim
+        receptive_field = (2 * context + 1, input_dim)
+        x = layers.Conv2D(filters=units, kernel_size=receptive_field)(x)
+        # Squeeze into 3rd dim array
+        x = layers.Lambda(keras.backend.squeeze, arguments=dict(axis=2))(x)
 
         x = layers.ReLU()(x)
         x = layers.Dropout(rate=dropouts[0])(x)
@@ -93,13 +92,8 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.TimeDistributed(
             layers.Dense(output_dim), name='dense_5')(x)
 
-        if tflite_version:
-            model = keras.Model(input_tensor, x, name='DeepSpeech')
-        else:
-            # Having 1 element vector is required to save and load model
-            # in non nightly tensorflow
-            # https://github.com/tensorflow/tensorflow/issues/35446.
-            model = keras.Model(input_tensor, x, name='DeepSpeech')
+        x = ResetMask()([x, tf.reduce_any(input_tensor != 0.0, axis=-1)])
+        model = keras.Model(input_tensor, x, name='DeepSpeech')
     return model
 
 
@@ -142,7 +136,7 @@ def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False)
     # Fix differences in stored weights between mozilla deepspeech and keras
     W_x, W_h, b = reformat_deepspeech_lstm(loaded_weights[6], loaded_weights[7])
     # TODO try using convolution to avoid materializing bigger matrix
-    # w[1] = w[1].reshape((26, 19, 1, 2048))
+    loaded_weights[1] = loaded_weights[1].reshape((19, 26, 1, 2048))
 
     keras_weights = [
         loaded_weights[1], loaded_weights[0],  # Dense 1
