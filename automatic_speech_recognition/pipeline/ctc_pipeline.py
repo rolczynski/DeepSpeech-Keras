@@ -2,6 +2,7 @@ import os
 from types import MethodType
 import logging
 from typing import List, Callable, Tuple
+import copy
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -121,9 +122,10 @@ class CTCPipeline(Pipeline):
                 return cache[index]
 
             return get_prep_batch
-
-        dataset.get_batch = preprocess(dataset.get_batch)
-        return dataset
+        
+        wrapped_dataset = copy.deepcopy(dataset)
+        wrapped_dataset.get_batch = preprocess(dataset.get_batch)
+        return wrapped_dataset
 
     def save(self, directory: str):
         """ Save each component of the CTC pipeline. """
