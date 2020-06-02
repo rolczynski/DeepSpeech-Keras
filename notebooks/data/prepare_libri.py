@@ -122,6 +122,8 @@ def create_index_data(cwd: str, dataset_path: str) -> pd.DataFrame:
                 # Read transcript
                 item_file_paths, item_transcripts = zip(*read_transcript(
                     os.path.join(current_folder, item)))
+                transcripts.extend(item_transcripts)
+                
                 for file_name in item_file_paths:
                     file_paths.append(
                         os.path.relpath(
@@ -135,13 +137,12 @@ def create_index_data(cwd: str, dataset_path: str) -> pd.DataFrame:
                                 current_folder, f'{file_name}.wav')
                         )
                     )
-                    transcripts.extend(item_transcripts)
         return file_paths, transcripts, file_sizes
 
     file_paths, transcripts, file_sizes = walk_dirs(dataset_path)
     index_data = pd.DataFrame(
         zip(file_paths, transcripts, file_sizes),
-        columns=['path', 'transcript', 'file_size'])
+        columns=['path', 'transcript', 'filesize'])
 
     return index_data
 
