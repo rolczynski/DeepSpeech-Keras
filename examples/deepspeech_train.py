@@ -24,7 +24,7 @@ features_extractor = asr.features.MFCC(
 #     # rnn_units=800,
 #     # is_mixed_precision=False,
 # )
-model = asr.model.load_mozila_deepspeech('./data/myfrozen.pb')
+model = asr.model.load_mozilla_deepspeech('./data/myfrozen.pb')
 optimizer = tf.optimizers.Adam(
     lr=5e-3,
     beta_1=0.9,

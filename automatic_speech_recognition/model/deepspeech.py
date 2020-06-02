@@ -113,7 +113,7 @@ def reformat_deepspeech_lstm(W, b):
     return W_x, W_h, b
 
 
-def load_mozila_deepspeech(path="./data/output_graph.pb", tflite_version=False):
+def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False):
     loaded_tensors, loaded_graph = load_deepspeech_graph(path)
     loaded_weights = []
     for key in loaded_tensors.keys():
