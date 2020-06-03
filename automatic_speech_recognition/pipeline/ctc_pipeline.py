@@ -68,9 +68,17 @@ class CTCPipeline(Pipeline):
         if is_extracted:  # then just align features
             features = FeaturesExtractor.align(data)
         else:
-            features, feature_lengths = self._features_extractor(data, return_lengths=True)
+            features, feature_lengths = self._features_extractor(
+                data, return_lengths=True)
         features = augmentation(features) if augmentation else features
+        feature_lengths = np.array(feature_lengths)
+
         labels = self._alphabet.get_batch_labels(transcripts)
+        label_lengths = np.array(
+            [len(transcript) for transcript in transcripts])
+
+        self.feature_lengths = feature_lengths
+        self.label_lengths = label_lengths
 
         return features, labels
 
@@ -87,9 +95,11 @@ class CTCPipeline(Pipeline):
             prepared_features: bool = False,
             **kwargs) -> keras.callbacks.History:
         """ Get ready data, compile and train a model. """
-        dataset = self.wrap_preprocess(dataset, prepared_features, augmentation)
+        dataset = self.wrap_preprocess(
+            dataset, prepared_features, augmentation)
         if dev_dataset is not None:
-            dev_dataset = self.wrap_preprocess(dev_dataset, prepared_features, augmentation)
+            dev_dataset = self.wrap_preprocess(
+                dev_dataset, prepared_features, augmentation)
         if not self._model.optimizer:  # a loss function and an optimizer
             self.compile_model()  # have to be set before the training
         return self._model.fit(dataset, validation_data=dev_dataset, **kwargs)
@@ -117,12 +127,13 @@ class CTCPipeline(Pipeline):
             def get_prep_batch(index: int):
                 if index not in cache:
                     batch = get_batch(index)
-                    preprocessed = self.preprocess(batch, is_extracted, augmentation)
+                    preprocessed = self.preprocess(
+                        batch, is_extracted, augmentation)
                     cache[index] = preprocessed
                 return cache[index]
 
             return get_prep_batch
-        
+
         wrapped_dataset = copy.deepcopy(dataset)
         wrapped_dataset.get_batch = preprocess(dataset.get_batch)
         return wrapped_dataset
@@ -161,11 +172,14 @@ class CTCPipeline(Pipeline):
         """ The CTC loss using TensorFlow's `ctc_loss`. """
 
         def mean_ctc_loss(labels, logits):
-            label_lengths = tf.math.count_nonzero(labels != self.alphabet.blank_token, axis=1)
-            logit_lengths = tf.math.count_nonzero(logits._keras_mask, axis=1)
-            return tf.reduce_mean(tf.nn.ctc_loss(tf.cast(labels, tf.int32), logits, label_lengths,
-                                                 logit_lengths,
-                                                 logits_time_major=False,
-                                                 blank_index=self.alphabet.blank_token), axis=0)
+
+            return tf.reduce_mean(
+                tf.nn.ctc_loss(
+                    tf.cast(labels, tf.int32),
+                    logits,
+                    tf.cast(self.label_lengths, dtype=tf.int32),
+                    tf.cast(self.feature_lengths, dtype=tf.int32),
+                    logits_time_major=False,
+                    blank_index=self.alphabet.blank_token), axis=0)
 
         return mean_ctc_loss
