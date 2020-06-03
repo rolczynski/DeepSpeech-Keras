@@ -92,12 +92,6 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.TimeDistributed(
             layers.Dense(output_dim), name='dense_5')(x)
 
-        # if not tflite_version:
-        #     # mask parts of the input to preserve information
-        #     # about actual (non-padded) sequence length
-        #     x = ResetMask()([
-        #         x, tf.reduce_any(input_tensor != 0.0, axis=-1)])
-
         model = keras.Model(input_tensor, x, name='DeepSpeech')
     return model
 
