@@ -87,7 +87,10 @@ def get_QuartzNet(tflite=True,num_b_blocks=3):#num_b_blocks^ 1 is 5x5 quartznet,
         x = layers.Conv1D(29,1,padding='same',dilation_rate=2,name='conv_4')(x)
     model = tf.keras.Model([input_tensor], x, name='QuartzNet')
     return model
-    
+# to use pretrained model, we need to load weights from two following links:
+#curl -LO https://api.ngc.nvidia.com/v2/models/nvidia/quartznet15x5/versions/2/files/quartznet15x5/JasperDecoderForCTC-STEP-247400.pt
+#curl -LO https://api.ngc.nvidia.com/v2/models/nvidia/quartznet15x5/versions/2/files/quartznet15x5/JasperEncoder-STEP-247400.pt
+#and pass these files as decoder encoder
 def load_pretrained_quartznet(enc_path, dec_path):
     model = get_QuartzNet(tflite=False)
     l = torch.load(enc_path)
