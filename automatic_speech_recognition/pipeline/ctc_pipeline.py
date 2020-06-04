@@ -82,10 +82,10 @@ class CTCPipeline(Pipeline):
 
         return features, labels
 
-    def compile_model(self):
+    def compile_model(self, **kwargs):
         """ The compiled model means the model configured for training. """
         loss = self.get_loss()
-        self._model.compile(self._optimizer, loss, run_eagerly=True)
+        self._model.compile(self._optimizer, loss, run_eagerly=True, **kwargs)
         logger.info("Model is successfully compiled")
 
     def fit(self,
