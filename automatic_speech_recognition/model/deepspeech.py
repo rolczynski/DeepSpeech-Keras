@@ -12,6 +12,11 @@ import logging
 logger = tf.get_logger()
 logger.setLevel(logging.WARNING)
 
+try:
+    from tensorflow.keras.mixed_precision import experimental as mixed_precision
+except ImportError:
+    pass
+
 
 class ResetMask(layers.Layer):
     def __init__(self, **kwargs):
@@ -34,6 +39,7 @@ class ResetMask(layers.Layer):
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
                    dropouts=(0.05, 0.05, 0.05, 0, 0.05),
                    tflite_version: bool = False,
+                   use_mixed_precision=False,
                    random_state=1) -> keras.Model:
     """
     The `get_deepspeech` returns the graph definition of the DeepSpeech
@@ -43,6 +49,10 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
     "Deep Speech: Scaling up end-to-end speech recognition."
     (https://arxiv.org/abs/1412.5567)
     """
+    if use_mixed_precision:
+        policy = mixed_precision.Policy('mixed_float16')
+        mixed_precision.set_policy(policy)
+
     if dropouts[3] != 0:
         logger.warning("Mozilla DeepSpeech doesn't use dropout "
                        "after LSTM(dropouts[3]). Be careful!")
@@ -121,7 +131,8 @@ def reformat_deepspeech_lstm(W, b):
     return W_x, W_h, b
 
 
-def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False):
+def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False,
+                           use_mixed_precision=False):
     loaded_tensors, loaded_graph = load_graph_from_gfile(path)
     loaded_weights = []
     for key in loaded_tensors.keys():
@@ -154,6 +165,7 @@ def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False)
                            context=9,
                            units=2048,
                            dropouts=(0, 0, 0, 0, 0),
-                           tflite_version=tflite_version)
+                           tflite_version=tflite_version,
+                           use_mixed_precision=use_mixed_precision)
     model.set_weights(keras_weights)
     return model
