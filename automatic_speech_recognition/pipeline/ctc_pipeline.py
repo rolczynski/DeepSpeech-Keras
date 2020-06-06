@@ -176,7 +176,7 @@ class CTCPipeline(Pipeline):
             return tf.reduce_mean(
                 tf.nn.ctc_loss(
                     tf.cast(labels, tf.int32),
-                    logits,
+                    tf.cast(logits, tf.float32),
                     tf.cast(self.label_lengths, dtype=tf.int32),
                     tf.cast(self.feature_lengths, dtype=tf.int32),
                     logits_time_major=False,
