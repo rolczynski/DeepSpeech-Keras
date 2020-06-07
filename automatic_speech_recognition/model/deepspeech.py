@@ -35,7 +35,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
     if tflite_version:
         max_seq_length = 3
 
-    with tf.device('/cpu:0'):
+    with tf.device('/gpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
 
         # Add 4th dimension [batch, time, frequency, channel]

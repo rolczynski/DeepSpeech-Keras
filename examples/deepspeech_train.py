@@ -1,12 +1,9 @@
 import numpy as np
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
 import os
 import automatic_speech_recognition as asr
 
-dataset = asr.dataset.Audio.from_csv('./test.csv', batch_size=1, use_filesizes=False)
-dev_dataset = asr.dataset.Audio.from_csv('./test.csv', batch_size=1, use_filesizes=False)
+
 alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.MFCC(
     features_num=26,
@@ -34,7 +31,10 @@ decoder = asr.decoder.GreedyDecoder()
 pipeline = asr.pipeline.CTCPipeline(
     alphabet, features_extractor, model, optimizer, decoder
 )
+
 callbacks = []
+dataset = asr.dataset.Audio.from_csv('./dev-clean-index.csv', batch_size=2, use_filesizes=False)
+dev_dataset = asr.dataset.Audio.from_csv('./test.csv', batch_size=1, use_filesizes=False)
 pipeline.fit(dataset, dev_dataset, epochs=100, callbacks=callbacks)
 # pipeline.save('./checkpoint')
 # pipeline.save('./checkpoint')
