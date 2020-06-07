@@ -75,16 +75,13 @@ def get_QuartzNet(tflite=True,num_b_blocks=3):#num_b_blocks^ 1 is 5x5 quartznet,
     if num_b_blocks > 2:
         x = B_block(75,512,5, 'B-15')(x)
 
-    x = layers.SeparableConv1D(512,87,padding='same',name='conv_2' , use_bias = False)(x)
+    x = layers.SeparableConv1D(512,87,padding='same',name='conv_2',dilation_rate=2, use_bias = False)(x)
     x = layers.BatchNormalization(name = 'BN-2')(x)
     x = layers.ReLU(name = 'RELU-2')(x)
     x = layers.Conv1D(1024,1,padding='same',name='conv_3' , use_bias = False)(x)
     x = layers.BatchNormalization(name = 'BN-3')(x)
     x = layers.ReLU(name = 'RELU-3')(x)
-    if tflite: #correct dilation is 2, but tf cant convert it correctli to tflite
-        x = layers.Conv1D(29,1,padding='same',dilation_rate=1,name='conv_4')(x)
-    else:
-        x = layers.Conv1D(29,1,padding='same',dilation_rate=2,name='conv_4')(x)
+    x = layers.Conv1D(29,1,padding='same',dilation_rate=1,name='conv_4')(x)
     model = tf.keras.Model([input_tensor], x, name='QuartzNet')
     return model
 # to use pretrained model, we need to load weights from two following links:
