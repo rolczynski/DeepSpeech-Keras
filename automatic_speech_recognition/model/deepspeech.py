@@ -13,24 +13,6 @@ logger = tf.get_logger()
 logger.setLevel(logging.WARNING)
 
 
-class ResetMask(layers.Layer):
-    def __init__(self, **kwargs):
-        super(ResetMask, self).__init__(**kwargs)
-        self.supports_masking = True
-        self._compute_output_and_mask_jointly = True
-
-    def compute_mask(self, inputs, mask=None):
-        return inputs[1]
-
-    def call(self, inputs):
-        # Compute the mask and outputs simultaneously.
-        inputs[0]._keras_mask = inputs[1]
-        return inputs[0]
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0]
-
-
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
                    dropouts=(0.05, 0.05, 0.05, 0, 0.05),
                    tflite_version: bool = False,
@@ -89,14 +71,14 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
         x = layers.ReLU(max_value=20)(x)
         x = layers.Dropout(rate=dropouts[4])(x)
 
-        x = layers.TimeDistributed(
-            layers.Dense(output_dim), name='dense_5')(x)
-
-        if not tflite_version:
+        if tflite_version:
             # mask parts of the input to preserve information
             # about actual (non-padded) sequence length
-            x = ResetMask()([
-                x, tf.reduce_any(input_tensor != 0.0, axis=-1)])
+            x = layers.TimeDistributed(
+                layers.Dense(output_dim), name='dense_5')(x)
+        else:
+            x = layers.TimeDistributed(
+                layers.Dense(output_dim), name='dense_5')(x, mask=tf.reduce_any(input_tensor != 0.0, axis=-1))
 
         model = keras.Model(input_tensor, x, name='DeepSpeech')
     return model
@@ -140,7 +122,6 @@ def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False)
 
     # Fix differences in stored weights between mozilla deepspeech and keras
     W_x, W_h, b = reformat_deepspeech_lstm(loaded_weights[6], loaded_weights[7])
-    # TODO try using convolution to avoid materializing bigger matrix
     loaded_weights[1] = loaded_weights[1].reshape((19, 26, 1, 2048))
 
     keras_weights = [
