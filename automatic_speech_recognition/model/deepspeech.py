@@ -18,24 +18,6 @@ except ImportError:
     pass
 
 
-class ResetMask(layers.Layer):
-    def __init__(self, **kwargs):
-        super(ResetMask, self).__init__(**kwargs)
-        self.supports_masking = True
-        self._compute_output_and_mask_jointly = True
-
-    def compute_mask(self, inputs, mask=None):
-        return inputs[1]
-
-    def call(self, inputs):
-        # Compute the mask and outputs simultaneously.
-        inputs[0]._keras_mask = inputs[1]
-        return inputs[0]
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0]
-
-
 def get_deepspeech(input_dim, output_dim, context=9, units=2048,
                    dropouts=(0.05, 0.05, 0.05, 0, 0.05),
                    tflite_version: bool = False,
@@ -63,7 +45,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
     if tflite_version:
         max_seq_length = 3
 
-    with tf.device('/cpu:0'):
+    with tf.device('/gpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
 
         # Add 4th dimension [batch, time, frequency, channel]
@@ -150,7 +132,6 @@ def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False,
 
     # Fix differences in stored weights between mozilla deepspeech and keras
     W_x, W_h, b = reformat_deepspeech_lstm(loaded_weights[6], loaded_weights[7])
-    # TODO try using convolution to avoid materializing bigger matrix
     loaded_weights[1] = loaded_weights[1].reshape((19, 26, 1, 2048))
 
     keras_weights = [

@@ -11,6 +11,7 @@ from google.cloud import storage
 import tensorflow as tf
 from tensorflow.python.framework import tensor_util
 from tensorflow.python.platform import gfile
+import time
 
 logger = logging.getLogger('asr.utils')
 
@@ -128,3 +129,15 @@ def create_overlapping_windows(batch_x, num_channels, context=9, return_stacked=
         batch_x = tf.reshape(batch_x, [batch_size, -1, window_width, num_channels])
 
     return batch_x
+
+def profile(function_name: str):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            print(f"Function {function_name} call invoked")
+            start_time = time.time()
+            res = func(*args, **kwargs)
+            print(f"Fucntion {function_name} call ended "
+                  f"in {time.time() - start_time}")
+            return res
+        return wrapper
+    return decorator
