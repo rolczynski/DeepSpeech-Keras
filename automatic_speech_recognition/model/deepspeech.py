@@ -18,10 +18,11 @@ except ImportError:
     pass
 
 
-def get_deepspeech(input_dim, output_dim, context=9, units=2048,
+def get_deepspeech(input_dim, output_dim,
+                   context=9, units=2048,
                    dropouts=(0.05, 0.05, 0.05, 0, 0.05),
-                   tflite_version: bool = False,
-                   use_mixed_precision=False,
+                   tflite_version=False,
+                   is_mixed_precision=False,
                    random_state=1) -> keras.Model:
     """
     The `get_deepspeech` returns the graph definition of the DeepSpeech
@@ -31,7 +32,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
     "Deep Speech: Scaling up end-to-end speech recognition."
     (https://arxiv.org/abs/1412.5567)
     """
-    if use_mixed_precision:
+    if is_mixed_precision:
         policy = mixed_precision.Policy('mixed_float16')
         mixed_precision.set_policy(policy)
 
@@ -43,7 +44,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
     max_seq_length = None
     if tflite_version:
-        max_seq_length = 3
+        max_seq_length = 5
 
     with tf.device('/gpu:0'):
         input_tensor = layers.Input([max_seq_length, input_dim], name='X')
@@ -86,7 +87,7 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
         model = keras.Model(input_tensor, x, name='DeepSpeech')
 
-    if use_mixed_precision:  # revert policy
+    if is_mixed_precision:  # revert policy
         policy = mixed_precision.Policy('float32')
         mixed_precision.set_policy(policy)
 
@@ -95,7 +96,8 @@ def get_deepspeech(input_dim, output_dim, context=9, units=2048,
 
 def reformat_deepspeech_lstm(W, b):
     """
-    Deepspeech lstm weights are 2 tensors: stacked weights and biases respectively. This function cuts those
+    Deepspeech lstm weights are 2 tensors:
+    stacked weights and biases respectively. This function cuts those
     tensors to fit keras weight format.
     :param W: Weights of deepspeech lstm tensor
     :param b: biases of deepspeech lstm tensor
@@ -118,8 +120,9 @@ def reformat_deepspeech_lstm(W, b):
     return W_x, W_h, b
 
 
-def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False,
-                           use_mixed_precision=False):
+def load_mozilla_deepspeech(
+        path="./data/output_graph.pb", tflite_version=False,
+        is_mixed_precision=False):
     loaded_tensors, loaded_graph = load_graph_from_gfile(path)
     loaded_weights = []
     for key in loaded_tensors.keys():
@@ -152,6 +155,6 @@ def load_mozilla_deepspeech(path="./data/output_graph.pb", tflite_version=False,
                            units=2048,
                            dropouts=(0, 0, 0, 0, 0),
                            tflite_version=tflite_version,
-                           use_mixed_precision=use_mixed_precision)
+                           is_mixed_precision=is_mixed_precision)
     model.set_weights(keras_weights)
     return model

@@ -35,13 +35,11 @@ class CTCPipeline(Pipeline):
                  decoder: decoder.Decoder,
                  gpus: List[str] = None):
         self._alphabet = alphabet
-        self._model_cpu = model
         self._optimizer = optimizer
         self._decoder = decoder
         self._features_extractor = features_extractor
         self._gpus = gpus
         self._model = model
-        self._just_processed_lengths = None
         # self._model = self.distribute_model(model, gpus) if gpus else model
 
     @property
@@ -54,7 +52,7 @@ class CTCPipeline(Pipeline):
 
     @property
     def model(self) -> keras.Model:
-        return self._model_cpu
+        return self._model
 
     @property
     def decoder(self) -> decoder.Decoder:

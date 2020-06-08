@@ -6,12 +6,12 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 
 def get_deepspeech2(input_dim, output_dim,
-                    is_mixed_precision=True,
+                    is_mixed_precision=False,
                     rnn_units=800,
                     convert_tflite=False, random_state=1) -> keras.Model:
     max_seq_length = None
     if convert_tflite:
-        max_seq_length = 50
+        max_seq_length = 5
 
     if is_mixed_precision:
         policy = mixed_precision.Policy('mixed_float16')
@@ -77,4 +77,9 @@ def get_deepspeech2(input_dim, output_dim,
             feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
             label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
             model = keras.Model([input_tensor, feature_lengths, label_lengths], output_tensor, name='DeepSpeech2')
+
+    if is_mixed_precision:  # revert policy
+        policy = mixed_precision.Policy('float32')
+        mixed_precision.set_policy(policy)
+
     return model
