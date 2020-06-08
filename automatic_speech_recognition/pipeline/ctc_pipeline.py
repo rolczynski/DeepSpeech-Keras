@@ -1,5 +1,6 @@
 import os
 from types import MethodType
+from functools import partial
 import logging
 from typing import List, Callable, Tuple
 import copy
@@ -112,14 +113,10 @@ class CTCPipeline(Pipeline):
         components. """
 
         def preprocess(get_batch):
-            cache = {}
-
             def get_prep_batch(index: int):
-                if index not in cache:
-                    batch = get_batch(index)
-                    preprocessed = self.preprocess(batch, is_extracted, augmentation)
-                    cache[index] = preprocessed
-                return cache[index]
+                batch = get_batch(index)
+                preprocessed = self.preprocess(batch, is_extracted, augmentation)
+                return preprocessed
 
             return get_prep_batch
         
@@ -159,13 +156,26 @@ class CTCPipeline(Pipeline):
 
     def get_loss(self) -> Callable:
         """ The CTC loss using TensorFlow's `ctc_loss`. """
-
+        def ctc_loss(labels, logits, label_lengths, logit_lengths):
+            return tf.nn.ctc_loss(labels, 
+                                  logits, 
+                                  label_lengths, 
+                                  logit_lengths, 
+                                  logits_time_major=False, 
+                                  blank_index=self.alphabet.blank_token)
+        wrapped_ctc = tf.function(ctc_loss, input_signature=(
+            tf.TensorSpec(shape=[None, None], dtype=tf.int32),
+            tf.TensorSpec(shape=[None, None, self.alphabet.size], dtype=tf.float32),
+            tf.TensorSpec(shape=[None], dtype=tf.int32),
+            tf.TensorSpec(shape=[None], dtype=tf.int32)
+        ))
+        
         def mean_ctc_loss(labels, logits):
             label_lengths = tf.math.count_nonzero(labels != self.alphabet.blank_token, axis=1)
             logit_lengths = tf.math.count_nonzero(logits._keras_mask, axis=1)
-            return tf.reduce_mean(tf.nn.ctc_loss(tf.cast(labels, tf.int32), logits, label_lengths,
-                                                 logit_lengths,
-                                                 logits_time_major=False,
-                                                 blank_index=self.alphabet.blank_token), axis=0)
+            return tf.reduce_mean(wrapped_ctc(tf.cast(labels, tf.int32), 
+                                              tf.cast(logits, tf.float32), 
+                                              tf.cast(label_lengths, tf.int32),
+                                              tf.cast(logit_lengths, tf.int32)))
 
         return mean_ctc_loss
