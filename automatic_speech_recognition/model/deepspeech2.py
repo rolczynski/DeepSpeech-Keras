@@ -8,9 +8,9 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 def get_deepspeech2(input_dim, output_dim,
                     is_mixed_precision=False,
                     rnn_units=800,
-                    convert_tflite=False, random_state=1) -> keras.Model:
+                    tflite_version=False, random_state=1) -> keras.Model:
     max_seq_length = None
-    if convert_tflite:
+    if tflite_version:
         max_seq_length = 5
 
     if is_mixed_precision:
@@ -56,11 +56,12 @@ def get_deepspeech2(input_dim, output_dim,
                                    return_sequences=True,
                                    reset_after=True,
                                    name=f'gru_{i}',
-                                   unroll=convert_tflite)
+                                   unroll=tflite_version)
             x = layers.Bidirectional(recurrent,
                                      name=f'bidirectional_{i}',
                                      merge_mode='concat')(x)
-            x = layers.Dropout(rate=0.5)(x) if i < 5 else x  # Only between
+            # Dropout only between inner layers
+            x = layers.Dropout(rate=0.5)(x) if i < 5 else x
 
         # Return at each time step logits along characters. Then CTC
         # computation is more stable, in contrast to the softmax.
@@ -69,14 +70,8 @@ def get_deepspeech2(input_dim, output_dim,
         x = layers.Dropout(rate=0.5)(x)
         output_tensor = layers.Dense(units=output_dim, name='dense_2')(x)
 
-        if convert_tflite:
-            model = keras.Model(input_tensor, output_tensor, name='DeepSpeech2')
-        else:
-            # Having 1 element vector is required to save and load model in non nightly tensorflow
-            # https://github.com/tensorflow/tensorflow/issues/35446.
-            feature_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='feature_lengths')
-            label_lengths = tf.keras.Input(shape=[1], dtype=tf.int32, name='label_lengths')
-            model = keras.Model([input_tensor, feature_lengths, label_lengths], output_tensor, name='DeepSpeech2')
+        model = keras.Model(
+            input_tensor, output_tensor, name='DeepSpeech2')
 
     if is_mixed_precision:  # revert policy
         policy = mixed_precision.Policy('float32')
