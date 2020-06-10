@@ -101,6 +101,7 @@ def get_quartznet(input_dim, output_dim,
                 x = B_block(
                     kernel_size, n_channels, num_small_blocks,
                     f'B-{block_idx}')(x)
+                block_idx += 1
 
         # First final layer
         x = layers.SeparableConv1D(
@@ -139,17 +140,17 @@ def load_nvidia_quartznet(
     pass paths to these files as decoder and encoder paths
     """
     import torch
-    model = get_quartznet(input_dim=26, output_dim=29,
+    model = get_quartznet(input_dim=64, output_dim=29,
                           is_mixed_precision=False,
                           tflite_version=False,
                           num_b_block_repeats=3,
                           b_block_kernel_sizes=(33, 39, 51, 63, 75),
-                          b_block_num_channels=(256, 256, 512, 512),
+                          b_block_num_channels=(256, 256, 512, 512, 512),
                           num_small_blocks=5,
                           random_state=1)
 
-    enc = torch.load(enc_path)
-    dec = torch.load(dec_path)
+    enc = torch.load(enc_path, map_location=torch.device('cpu'))
+    dec = torch.load(dec_path, map_location=torch.device('cpu'))
 
     # First encoder layer
     conv_1 = model.get_layer(name='conv_1')
