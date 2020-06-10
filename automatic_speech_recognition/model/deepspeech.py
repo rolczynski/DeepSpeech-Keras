@@ -121,8 +121,13 @@ def reformat_deepspeech_lstm(W, b):
 
 
 def load_mozilla_deepspeech(
-        path="./data/output_graph.pb", tflite_version=False,
+        path="./data/mozilla_deepspeech.pb", tflite_version=False,
         is_mixed_precision=False):
+    """
+    The weights for the model can be downloaded from
+    https://github.com/mozilla/DeepSpeech/releases/download/v0.7.3/deepspeech-0.7.3-checkpoint.tar.gz
+    the archive contains the weights in .pb format
+    """
     loaded_tensors, loaded_graph = load_graph_from_gfile(path)
     loaded_weights = []
     for key in loaded_tensors.keys():

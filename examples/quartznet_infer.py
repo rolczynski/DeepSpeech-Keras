@@ -13,6 +13,9 @@ from torch_stft import STFT
 
 import python_speech_features
 import librosa
+
+from automatic_speech_recognition.model.quartznet import load_nvidia_quartznet
+
 class FilterBanksTorch(asr.features.FeaturesExtractor):
 
     def __init__(self, features_num: int, is_standardization=True, **kwargs):
@@ -317,7 +320,7 @@ features_extractor = FilterBanksTorch(
     winstep=0.01,
     winfunc=np.hanning,
 )
-model = load_pretrained_quartznet('JasperEncoder-STEP-247400.pt','JasperDecoderForCTC-STEP-247400.pt')
+model = load_nvidia_quartznet('./notebooks/data/JasperEncoder-STEP-247400.pt','./notebooks/data/JasperDecoderForCTC-STEP-247400.pt')
 optimizer = tf.optimizers.Adam(
     lr=1e-4,
     beta_1=0.9,
