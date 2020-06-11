@@ -30,7 +30,7 @@ class FilterBanksTorch(asr.features.FeaturesExtractor):
         """ Use `python_speech_features` lib to extract log filter banks from
         the features file. """
 
-        features = ft.forward(torch.tensor(audio).unsqueeze(0),torch.tensor([audio.shape[0]])).numpy()[0].T
+        features = self.ft.forward(torch.tensor(audio).unsqueeze(0),torch.tensor([audio.shape[0]])).numpy()[0].T
         return features
 
 CONSTANT= 1e-5
