@@ -37,14 +37,15 @@ class MFCC(features.FeaturesExtractor):
         self.window_step = int(winstep * sample_rate)
 
     def make_features(self, audio: np.ndarray) -> np.ndarray:
-        """ Use `python_speech_features` lib to extract log filter banks from
+        """ Use Tensorflow  lib to extract log filter banks from
         the features file. """
-        spectrogram = contrib_audio.audio_spectrogram(audio.audio,
-                                                        window_size=self.window_size,
-                                                        stride=self.window_step,
-                                                        magnitude_squared=True)
+        spectrogram = contrib_audio.audio_spectrogram(audio,
+                                                      window_size=self.window_size,
+                                                      stride=self.window_step,
+                                                      magnitude_squared=True)
         mfccs = contrib_audio.mfcc(spectrogram=spectrogram,
-                                        sample_rate=self.sample_rate,
-                                        dct_coefficient_count=self.features_num,
-                                        upper_frequency_limit=self.sample_rate//2)
+                                   sample_rate=self.sample_rate,
+                                   dct_coefficient_count=self.features_num,
+                                   upper_frequency_limit=8000)
+        # take the first channel only
         return self.standardize(mfccs[0]) if self.is_standardization else mfccs[0]

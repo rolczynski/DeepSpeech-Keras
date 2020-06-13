@@ -2,6 +2,9 @@ import tensorflow as tf
 from tensorflow import keras
 from .weights_manip import load_weights
 import numpy as np
+import logging
+
+logger = logging.getLogger('asr.utils.export')
 
 
 class KerasTfLiteExporter:
@@ -50,7 +53,7 @@ class KerasTfLiteExporter:
 
         keras_output = self._model.predict(input_data)
         if np.allclose(tflite_output, keras_output, atol=1e-6):
-            print("Test successful. Tflite and Keras give similar results")
+            logger.error("Test successful. Tflite and Keras give similar results")
         else:
-            print("CAREFUL!!! TFLITE AND KERAS OUTPUTS ARE DIFFERENT")
-            print(f'MSE of outputs: {((keras_output - tflite_output) ** 2).mean()}')
+            logger.error("CAREFUL!!! TFLITE AND KERAS OUTPUTS ARE DIFFERENT")
+            logger.error(f'MSE of outputs: {((keras_output - tflite_output) ** 2).mean()}')

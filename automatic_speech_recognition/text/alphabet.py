@@ -48,8 +48,8 @@ class Alphabet:
                 self._label_to_str.append(char)
                 self._str_to_label[char] = self.size
                 self.size += 1
-            # Blank token is the first
-            self.blank_token = 0
+            # Blank token is added on the end
+            self.blank_token = self.size - 1
 
     def get_batch_labels(self, transcripts: List[str]) -> np.ndarray:
         """ Convert batch transcripts to labels """
