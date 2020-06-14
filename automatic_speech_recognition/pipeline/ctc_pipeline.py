@@ -66,7 +66,7 @@ class CTCPipeline(Pipeline):
         data, transcripts = batch
         if is_extracted:  # then just align features
             feature_lengths = np.array(
-                [feature.shape[1] for feature in features])
+                [len(feature) for feature in features])
             features = FeaturesExtractor.align(data)
         else:
             features, feature_lengths = self._features_extractor(data)

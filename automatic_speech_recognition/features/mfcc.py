@@ -1,16 +1,21 @@
-import numpy as np
 import math
+import numpy as np
 import librosa
-from .. import features
 from . import audio_utils
+from .. import features
 
 
-class FilterBanks(features.FeaturesExtractor):
-
+class MFCC(features.FeaturesExtractor):
+    """
+    This class calculates the Mel-frequency Cepstral Coefficients (MFCCs)
+    The procedure is described in:
+    https://haythamfayek.com/2016/04/21/
+    speech-processing-for-machine-learning.html
+    """
     def __init__(self, features_num: int, sample_rate: int,
                  winlen: float = 0.02, winstep: float = 0.01,
-                 window="hann", n_fft=None, mag_power=2.0,
-                 log=True, log_eps: float = 2**(-24),
+                 window="hann", n_fft=None,
+                 dct_type: int = 2, lifter: float = 0,
                  dither: float = 1e-5, preemph: float = 0.97,
                  standardize="per_feature"):
 
@@ -20,15 +25,14 @@ class FilterBanks(features.FeaturesExtractor):
         self.hop_length = math.ceil(winstep * sample_rate)
         self.window = window
         self.n_fft = n_fft or 2 ** math.ceil(math.log2(self.win_length))
-        self.mag_power = mag_power
-        self.log = log
-        self.log_eps = log_eps
+        self.dct_type = dct_type
+        self.lifter = lifter
         self.dither = dither
         self.preemph = preemph
         super().__init__(standardize=standardize)
 
     def make_features(self, audio: np.ndarray) -> np.ndarray:
-        """ Extract (log) mel filter banks from the audio """
+        """ Extract MFCCs from the audio. """
         # dither
         if self.dither > 0:
             audio = audio_utils.dither(audio, self.dither)
@@ -37,19 +41,13 @@ class FilterBanks(features.FeaturesExtractor):
         if self.preemph is not None:
             audio = audio_utils.preemphasize(audio, self.preemph)
 
-        # get filterbanks. Librosa returns (n_mels, t)
-        features = librosa.feature.melspectrogram(
-            audio, self.sample_rate, n_fft=self.n_fft,
+        # get mfccs. Librosa returns (n_mfcc, t)
+        features = librosa.feature.mfcc(
+            audio, self.sample_rate, n_mfcc=self.features_num,
+            dct_type=self.dct_type, lifter=self.lifter, n_fft=self.n_fft,
             hop_length=self.hop_length, win_length=self.win_length,
-            window=self.window, center=True, power=self.mag_power,
-            n_mels=self.features_num
+            window=self.window
         )
 
-        # logarithm if needed
-        if self.log:
-            features = np.log(features + self.log_eps)
-
         # put features into correct order (time, n_features)
-        features = features.transpose()
-            
-        return features
+        return features.transpose()

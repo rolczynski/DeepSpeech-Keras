@@ -8,10 +8,10 @@ import automatic_speech_recognition as asr
 def feature_extractor() -> asr.features.FilterBanks:
     return asr.features.FilterBanks(
         features_num=80,
-        samplerate=16000,
+        sample_rate=16000,
         winlen=0.025,
         winstep=0.01,
-        winfunc=np.hamming
+        winfunc="hamming"
     )
 
 
