@@ -5,7 +5,7 @@ from functools import reduce
 from logging import Logger
 from typing import Any, Tuple
 import numpy as np
-from scipy.io import wavfile
+import librosa
 from tensorflow import keras
 from google.cloud import storage
 import tensorflow as tf
@@ -46,10 +46,19 @@ def maybe_download_from_bucket(bucket_name: str, remote_path: str, local_path: s
     download_from_bucket(bucket_name, remote_path, local_path)
 
 
-def read_audio(file_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
-    """ Read already prepared features from the store. """
-    data = tf.io.read_file(file_path)
-    audio, sample_rate = tf.audio.decode_wav(data)
+# def read_audio(file_path: str) -> Tuple[tf.Tensor, tf.Tensor]:
+#     """ Read already prepared features from the store. """
+#     data = tf.io.read_file(file_path)
+#     audio, sample_rate = tf.audio.decode_wav(data)
+#     return audio, sample_rate
+
+
+def read_audio(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Read audiofile to np.ndarray of np.float32 numbers,
+    normalized in between [-1, 1]
+    """
+    audio, sample_rate = librosa.load(file_path, sr=None)
     return audio, sample_rate
 
 

@@ -2,12 +2,23 @@ import numpy as np
 import automatic_speech_recognition as asr
 
 
-def test_standardize():
-    features = np.random.normal(loc=2, size=[20, 10])
-    standardized = asr.features.FeaturesExtractor.standardize(features)
-    assert standardized.shape == (20, 10)
-    assert np.isclose(standardized.mean(), 0)
-    assert np.isclose(standardized.std(), 1)
+def test_standardize_batch():
+    features = np.random.normal(loc=2, size=[5, 20, 10])
+    lengths = (np.ones(shape=[5]) * 20).astype('int32')
+    standardized_ft = asr.features.FeaturesExtractor.standardize_batch(
+        features, lengths, how="per_feature")
+    assert standardized_ft.shape == (5, 20, 10)
+    assert np.all(np.isclose(standardized_ft.mean(axis=2), 0))
+    assert np.all(np.isclose(standardized_ft.std(axis=2), 1, atol=1e-4))
+
+    standardized_gl = asr.features.FeaturesExtractor.standardize_batch(
+        features, lengths, how="all_features")
+    assert standardized_gl.shape == (5, 20, 10)
+    assert np.all(
+        np.isclose(standardized_gl.reshape([5, 200]).mean(axis=1), 0))
+    assert np.all(
+        np.isclose(standardized_gl.reshape([5, 200]).std(axis=1), 1,
+                   atol=1e-4))
 
 
 def test_align():

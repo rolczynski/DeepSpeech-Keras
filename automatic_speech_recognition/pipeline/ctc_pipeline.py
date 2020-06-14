@@ -65,16 +65,17 @@ class CTCPipeline(Pipeline):
         """ Preprocess batch data to format understandable to a model. """
         data, transcripts = batch
         if is_extracted:  # then just align features
+            feature_lengths = np.array(
+                [feature.shape[1] for feature in features])
             features = FeaturesExtractor.align(data)
         else:
-            features, feature_lengths = self._features_extractor(
-                data, return_lengths=True)
+            features, feature_lengths = self._features_extractor(data)
         features = augmentation(features) if augmentation else features
         feature_lengths = np.array(feature_lengths)
 
-        labels = self._alphabet.get_batch_labels(transcripts)
         label_lengths = np.array(
             [len(transcript) for transcript in transcripts])
+        labels = self._alphabet.get_batch_labels(transcripts)
 
         self.feature_lengths = feature_lengths
         self.label_lengths = label_lengths

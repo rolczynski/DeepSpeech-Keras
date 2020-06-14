@@ -4,6 +4,7 @@ from . import dataset
 from . import decoder
 from . import evaluate
 from . import features
+from . import tures
 from . import model
 from . import pipeline
 from . import text
