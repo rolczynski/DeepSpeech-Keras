@@ -12,7 +12,7 @@ class MFCC(features.FeaturesExtractor):
     https://haythamfayek.com/2016/04/21/
     speech-processing-for-machine-learning.html
     """
-    def __init__(self, features_num: int, sample_rate: int,
+    def __init__(self, features_num: int, sample_rate: int = 16000,
                  winlen: float = 0.02, winstep: float = 0.01,
                  window="hann", n_fft=None,
                  dct_type: int = 2, lifter: float = 0,

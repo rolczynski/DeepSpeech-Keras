@@ -6,7 +6,8 @@ import automatic_speech_recognition as asr
 alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.MFCC(
     features_num=26,
-    is_standardization=False,
+    sample_rate=16000,
+    standardize=None,
     winlen=0.032,
     winstep=0.02,
 )
@@ -31,10 +32,10 @@ pipeline = asr.pipeline.CTCPipeline(
 )
 
 callbacks = []
-dataset = asr.dataset.Audio.from_csv('./dev-clean-index.csv', batch_size=10, use_filesizes=True)
+dataset = asr.dataset.Audio.from_csv('./data/dev-clean-index.csv', batch_size=10, use_filesizes=True)
 dataset.sort_by_length()
 dataset.shuffle_indices()
-dev_dataset = asr.dataset.Audio.from_csv('./dev-clean-index.csv', batch_size=10, use_filesizes=True)
+dev_dataset = asr.dataset.Audio.from_csv('./data/dev-clean-index.csv', batch_size=10, use_filesizes=True)
 dev_dataset.sort_by_length()
 dev_dataset.shuffle_indices()
 pipeline.fit(dataset, dev_dataset, epochs=100, callbacks=callbacks)

@@ -10,9 +10,10 @@ dev_dataset = asr.dataset.Audio.from_csv('test.csv', batch_size=1)
 alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.FilterBanks(
     features_num=160,
+    sample_rate=16000,
     winlen=0.02,
     winstep=0.01,
-    winfunc=np.hanning
+    window=np.hanning
 )
 model = asr.model.get_rnnt(
     input_dim=160,

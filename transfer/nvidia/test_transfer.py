@@ -16,10 +16,10 @@ def pipeline() -> asr.pipeline.CTCPipeline:
     # padding audio signal is only required to compare activations
     spectrogram = asr.features.Spectrogram(
         features_num=160,
-        samplerate=16000,
+        sample_rate=16000,
         winlen=0.02,
         winstep=0.01,
-        winfunc=np.hanning,
+        window=np.hanning,
         pad_audio_to=8
     )
     greedy_decoder = asr.decoder.GreedyDecoder()
@@ -45,7 +45,7 @@ def test_transfer_open_seq2seq_deepspeech2(pipeline):
 
     # Test Feature Extraction process
     x = asr.utils.read_audio('../../tests/sample-en.wav')
-    x = pipeline.features_extractor([x])
+    x, lengths = pipeline.features_extractor([x])
     assert x.shape == nvidia['input'].shape
     assert np.allclose(x, nvidia['input'], atol=1e-5)
 

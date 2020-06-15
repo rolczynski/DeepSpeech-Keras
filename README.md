@@ -55,9 +55,10 @@ dev_dataset = asr.dataset.Audio.from_csv('dev.csv', batch_size=32)
 alphabet = asr.text.Alphabet(lang='en')
 features_extractor = asr.features.FilterBanks(
     features_num=160,
+	sample_rate=16000,
     winlen=0.02,
     winstep=0.01,
-    winfunc=np.hanning
+    window="hann"
 )
 model = asr.model.get_deepspeech2(
     input_dim=160,

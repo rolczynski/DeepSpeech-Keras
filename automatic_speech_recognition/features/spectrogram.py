@@ -6,7 +6,7 @@ from . import audio_utils
 
 
 class Spectrogram(features.FeaturesExtractor):
-    def __init__(self, features_num: int, sample_rate: int,
+    def __init__(self, features_num: int, sample_rate: int = 16000,
                  winlen: float = 0.02, winstep: float = 0.01,
                  window="hann", n_fft=None, mag_power=1.0,
                  log=True, log_eps: float = 2**(-24),
